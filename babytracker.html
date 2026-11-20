@@ -1,0 +1,1904 @@
+<!DOCTYPE html>
+<html lang="ko" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0f172a">
+  <title>우리 아기 기록 - 부부 전용 트래커</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter & Noto Sans KR -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Firebase App & Realtime Database Compat SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'Noto Sans KR', 'sans-serif'],
+          },
+          colors: {
+            night: {
+              950: '#090d16',
+              900: '#0f172a',
+              800: '#1e293b',
+              700: '#334155',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* 한 손 조작 및 모바일 최적화 스타일 */
+    * {
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    input, textarea, select {
+      user-select: auto;
+    }
+    body {
+      font-family: 'Inter', 'Noto Sans KR', sans-serif;
+      overscroll-behavior-y: none;
+    }
+    /* 최소 56px 대형 터치 타겟 보장 */
+    .btn-thumb {
+      min-height: 56px;
+      min-width: 56px;
+      transition: transform 0.1s ease, background-color 0.15s ease;
+    }
+    .btn-thumb:active {
+      transform: scale(0.96);
+    }
+    /* 커스텀 스크롤바 숨김 */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 dark:bg-night-950 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-200">
+
+  <!-- 최상단 헤더: 동기화 상태, 작성자(엄마/아빠) 토글, 다크모드 -->
+  <header class="sticky top-0 z-30 bg-white/90 dark:bg-night-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 py-3">
+    <div class="max-w-lg mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-2xl bg-indigo-500/20 text-indigo-500 dark:text-indigo-400 flex items-center justify-center font-bold text-lg">
+          <i class="fa-solid fa-baby"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-1.5">
+            <h1 id="headerBabyName" class="font-bold text-base tracking-tight">우리 아기</h1>
+            <span id="syncBadge" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-500/15 text-amber-500">
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> 연결중
+            </span>
+          </div>
+          <p id="headerDate" class="text-xs text-slate-500 dark:text-slate-400"></p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <!-- 현재 기록자 선택 (엄마 / 아빠) -->
+        <button id="roleToggleBtn" onclick="toggleParentRole()" class="px-3 py-2 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30">
+          <i class="fa-solid fa-user"></i>
+          <span id="roleLabel">엄마</span>
+        </button>
+        <!-- 다크모드 토글 -->
+        <button onclick="toggleDarkMode()" aria-label="테마 전환" class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-night-800 text-slate-600 dark:text-slate-300 flex items-center justify-center">
+          <i id="themeIcon" class="fa-solid fa-sun"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 발열 집중 관찰 배너 (오늘 37.5도 이상 기록이 있을 때만 자동 노출) -->
+  <div id="feverAlertBanner" class="hidden bg-rose-600 text-white px-4 py-2.5 text-xs">
+    <div class="max-w-lg mx-auto flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-temperature-high text-base animate-bounce"></i>
+        <span id="feverAlertText" class="font-medium">오늘 발열 기록이 있습니다. 수유량과 소변 횟수를 확인하세요.</span>
+      </div>
+      <button onclick="copyPediatricSummary()" class="shrink-0 bg-white/20 hover:bg-white/30 px-2.5 py-1 rounded-lg font-bold">
+        문진요약 복사
+      </button>
+    </div>
+  </div>
+
+  <!-- iOS 홈 화면 추가 안내 배너 (Safari 일반 탭 접속 시 최초 1회 노출) -->
+  <div id="iosInstallBanner" class="hidden bg-indigo-600 text-white px-4 py-2.5 text-xs">
+    <div class="max-w-lg mx-auto flex items-center justify-between gap-2">
+      <p>아이폰 Safari 하단 <b>[공유 <i class="fa-solid fa-arrow-up-from-bracket"></i>] → [홈 화면에 추가]</b>를 누르면 앱처럼 전체화면으로 쓸 수 있어요.</p>
+      <button onclick="dismissIosBanner()" class="p-1.5 text-white/80 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+  </div>
+
+  <!-- 메인 콘텐츠 컨테이너 (하단 탭바 여백 확보) -->
+  <main class="flex-1 max-w-lg w-full mx-auto px-4 pt-4 pb-32 space-y-4">
+
+    <!-- ==================== TAB 1: 오늘 대시보드 ==================== -->
+    <section id="tab-today" class="space-y-4">
+      
+      <!-- 1. 아기 현재 상태 요약 카드 (교대 육아 핵심 브리핑) -->
+      <div class="grid grid-cols-2 gap-3">
+        <!-- 마지막 수유 경과 카드 -->
+        <div class="bg-white dark:bg-night-900 rounded-3xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-sm relative overflow-hidden">
+          <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
+            <span class="font-medium flex items-center gap-1.5"><i class="fa-solid fa-bottle-droplet text-sky-400"></i> 마지막 수유</span>
+            <span id="lastFeedAuthor" class="text-[11px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-night-800">-</span>
+          </div>
+          <div id="lastFeedElapsed" class="text-xl font-bold tracking-tight text-sky-500 dark:text-sky-400 my-0.5">기록 없음</div>
+          <div id="lastFeedDetail" class="text-xs text-slate-500 dark:text-slate-400 truncate">첫 수유를 기록해보세요</div>
+          <div id="nextFeedHint" class="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/80 text-[11px] text-slate-400">
+            예상 다음 수유: -
+          </div>
+        </div>
+
+        <!-- 현재 수면 / 깨어있는 시간 카드 -->
+        <div id="sleepStatusCard" class="bg-white dark:bg-night-900 rounded-3xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-sm relative overflow-hidden">
+          <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
+            <span id="sleepStatusTitle" class="font-medium flex items-center gap-1.5"><i class="fa-solid fa-moon text-indigo-400"></i> 깨어있는 중</span>
+            <span id="sleepAuthorBadge" class="text-[11px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-night-800">-</span>
+          </div>
+          <div id="sleepTimerDisplay" class="text-xl font-bold tracking-tight text-indigo-500 dark:text-indigo-400 my-0.5">0시간 0분</div>
+          <div id="lastSleepDetail" class="text-xs text-slate-500 dark:text-slate-400 truncate">오늘 수면 기록 대기중</div>
+          <div class="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/80 text-[11px] text-slate-400 flex justify-between">
+            <span>오늘 총 수면</span>
+            <span id="todayTotalSleepMini" class="font-semibold text-slate-600 dark:text-slate-300">0시간 0분</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. 오늘 누적 통계 바 -->
+      <div class="bg-white dark:bg-night-900 rounded-3xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-sm">
+        <div class="grid grid-cols-4 divide-x divide-slate-100 dark:divide-slate-800 text-center">
+          <div class="px-1">
+            <div class="text-[11px] text-slate-400 mb-0.5">총 수유량</div>
+            <div id="statTotalMl" class="text-base font-bold text-sky-500 dark:text-sky-400">0ml</div>
+            <div id="statFeedCount" class="text-[10px] text-slate-400">0회</div>
+          </div>
+          <div class="px-1">
+            <div class="text-[11px] text-slate-400 mb-0.5">총 수면</div>
+            <div id="statTotalSleep" class="text-base font-bold text-indigo-500 dark:text-indigo-400">0h 0m</div>
+            <div id="statNapNight" class="text-[10px] text-slate-400">낮0 / 밤0</div>
+          </div>
+          <div class="px-1">
+            <div class="text-[11px] text-slate-400 mb-0.5">소변</div>
+            <div id="statPeeCount" class="text-base font-bold text-amber-500">0회</div>
+            <div class="text-[10px] text-slate-400">기저귀</div>
+          </div>
+          <div class="px-1">
+            <div class="text-[11px] text-slate-400 mb-0.5">대변</div>
+            <div id="statPooCount" class="text-base font-bold text-emerald-500">0회</div>
+            <div id="statLastDiaper" class="text-[10px] text-slate-400">-</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. 한 손 원터치 액션 패널 (엄지가 닿기 쉬운 중앙~하단 배치) -->
+      <div class="bg-white dark:bg-night-900 rounded-3xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-3">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400">빠른 한 손 기록</h2>
+          <span class="text-[11px] text-slate-400">터치 즉시 부부 실시간 공유</span>
+        </div>
+
+        <!-- 수유 & 수면 메인 대형 버튼 (최소 64px 높이) -->
+        <div id="mainActionGrid" class="grid grid-cols-2 gap-3">
+          <!-- 분유/수유 기록 열기 -->
+          <button id="actionCardFeed" onclick="openFeedModal()" class="btn-thumb h-20 rounded-2xl bg-sky-500 hover:bg-sky-600 text-white p-3.5 flex flex-col justify-between items-start shadow-lg shadow-sky-500/20">
+            <div class="w-full flex items-center justify-between">
+              <i class="fa-solid fa-bottle-droplet text-xl"></i>
+              <span id="quickRepeatFeedBadge" class="text-[11px] bg-white/20 px-2 py-0.5 rounded-full font-medium">120ml</span>
+            </div>
+            <div class="text-left">
+              <div class="font-bold text-base leading-tight">수유 기록</div>
+              <div class="text-[11px] text-sky-100">분유 · 모유 · 이유식</div>
+            </div>
+          </button>
+
+          <!-- 수면 타이머 토글 / 수동 입력 -->
+          <div id="actionCardSleep" class="flex flex-col gap-1.5">
+            <button id="mainSleepToggleBtn" onclick="toggleSleepTimer()" class="btn-thumb flex-1 rounded-2xl bg-indigo-500 hover:bg-indigo-600 text-white p-3 flex flex-col justify-between items-start shadow-lg shadow-indigo-500/20">
+              <div class="w-full flex items-center justify-between">
+                <i id="mainSleepIcon" class="fa-solid fa-moon text-lg"></i>
+                <span id="mainSleepSubBadge" class="text-[10px] bg-white/20 px-2 py-0.5 rounded-full">타이머</span>
+              </div>
+              <div class="text-left">
+                <div id="mainSleepBtnText" class="font-bold text-sm leading-tight">잠들기 시작</div>
+              </div>
+            </button>
+            <button onclick="openSleepManualModal()" class="py-1.5 px-3 rounded-xl bg-slate-100 dark:bg-night-800 text-slate-600 dark:text-slate-300 text-[11px] font-medium text-center hover:bg-slate-200 dark:hover:bg-slate-700">
+              <i class="fa-regular fa-clock mr-1"></i>지난 수면 수동 입력
+            </button>
+          </div>
+        </div>
+
+        <!-- 직전 수유량 1탭 즉시 저장 프리셋 -->
+        <button id="instantRepeatFeedBtn" onclick="instantRepeatLastFeed()" class="w-full py-3 px-4 rounded-2xl bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/25 text-sky-600 dark:text-sky-400 text-xs font-bold flex items-center justify-between transition-all active:scale-[0.98]">
+          <span class="flex items-center gap-2"><i class="fa-solid fa-bolt"></i> <span id="instantRepeatLabel">방금 전과 동일하게 1탭 저장 (분유 120ml)</span></span>
+          <span class="text-[10px] bg-sky-500/20 px-2 py-0.5 rounded-full">즉시저장</span>
+        </button>
+
+        <!-- 기저귀 1탭 즉시 저장 3종 (설정에서 숨김 가능) -->
+        <div id="diaperQuickGroup" class="grid grid-cols-3 gap-2 pt-0.5">
+          <button onclick="quickLogDiaper('pee')" class="btn-thumb rounded-2xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-600 dark:text-amber-400 flex flex-col items-center justify-center p-2 gap-1">
+            <i class="fa-solid fa-droplet text-base"></i>
+            <span class="text-xs font-bold">소변</span>
+          </button>
+          <button onclick="quickLogDiaper('poo')" class="btn-thumb rounded-2xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 flex flex-col items-center justify-center p-2 gap-1">
+            <i class="fa-solid fa-poop text-base"></i>
+            <span class="text-xs font-bold">대변</span>
+          </button>
+          <button onclick="quickLogDiaper('both')" class="btn-thumb rounded-2xl bg-teal-500/15 hover:bg-teal-500/25 border border-teal-500/30 text-teal-600 dark:text-teal-400 flex flex-col items-center justify-center p-2 gap-1">
+            <i class="fa-solid fa-layer-group text-base"></i>
+            <span class="text-xs font-bold">소+대변</span>
+          </button>
+        </div>
+
+        <!-- 체온/투약 & 키/몸무게 성장 기록 버튼 -->
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="openHealthModal()" class="btn-thumb rounded-2xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-600 dark:text-rose-400 flex items-center justify-center gap-2 p-2.5">
+            <i class="fa-solid fa-thermometer text-base"></i>
+            <span class="text-xs font-bold">체온 · 투약</span>
+          </button>
+          <button onclick="openGrowthModal()" class="btn-thumb rounded-2xl bg-violet-500/15 hover:bg-violet-500/25 border border-violet-500/30 text-violet-600 dark:text-violet-400 flex items-center justify-center gap-2 p-2.5">
+            <i class="fa-solid fa-ruler-vertical text-base"></i>
+            <span class="text-xs font-bold">키 · 몸무게</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 4. 오늘의 최근 기록 피드 -->
+      <div class="space-y-2.5">
+        <div class="flex items-center justify-between px-1">
+          <h3 class="text-sm font-bold text-slate-700 dark:text-slate-200">오늘의 기록 피드</h3>
+          <span id="todayLogCountLabel" class="text-xs text-slate-400">총 0건</span>
+        </div>
+        <div id="todayLogsContainer" class="space-y-2">
+          <!-- JS로 렌더링 -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 2: 타임라인 · 통계 ==================== -->
+    <section id="tab-stats" class="hidden space-y-4">
+      
+      <!-- 날짜 이동 컨트롤 -->
+      <div class="bg-white dark:bg-night-900 rounded-3xl p-3 border border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
+        <button onclick="changeStatsDate(-1)" class="w-11 h-11 rounded-2xl bg-slate-100 dark:bg-night-800 flex items-center justify-center text-slate-600 dark:text-slate-300">
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <div class="text-center">
+          <div id="statsDateLabel" class="font-bold text-sm">2026년 11월 20일</div>
+          <div id="statsDateSub" class="text-[11px] text-slate-400">오늘</div>
+        </div>
+        <button onclick="changeStatsDate(1)" class="w-11 h-11 rounded-2xl bg-slate-100 dark:bg-night-800 flex items-center justify-center text-slate-600 dark:text-slate-300">
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+      </div>
+
+      <!-- 24시간 일일 패턴 타임 바 (삐요로그 스타일 시각 블록) -->
+      <div class="bg-white dark:bg-night-900 rounded-3xl p-4 border border-slate-200/80 dark:border-slate-800 space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="text-sm font-bold">24시간 생활 리듬 타임바</h3>
+          <div class="flex items-center gap-2 text-[11px]">
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-indigo-500"></span>수면</span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-sky-400"></span>수유</span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-amber-400"></span>기저귀</span>
+          </div>
+        </div>
+        
+        <!-- 0시 ~ 24시 타임 바 -->
+        <div class="relative pt-4 pb-1">
+          <div class="flex justify-between text-[10px] text-slate-400 mb-1 px-0.5">
+            <span>0시</span><span>6시</span><span>12시</span><span>18시</span><span>24시</span>
+          </div>
+          <div id="dailyTimeBar" class="w-full h-10 bg-slate-100 dark:bg-night-800 rounded-xl relative overflow-hidden border border-slate-200/50 dark:border-slate-700/50">
+            <!-- 시간별 블록 렌더링 -->
+          </div>
+        </div>
+        <div id="selectedDaySummaryText" class="text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-night-800/60 p-2.5 rounded-xl">
+          선택한 날짜의 수유·수면 요약이 표시됩니다.
+        </div>
+      </div>
+
+      <!-- 최근 7일 주간 추이 막대 그래프 -->
+      <div class="bg-white dark:bg-night-900 rounded-3xl p-4 border border-slate-200/80 dark:border-slate-800 space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 class="text-sm font-bold">최근 7일 추이</h3>
+          <div class="text-right">
+            <div id="weeklyAvgLabel" class="text-xs text-sky-400 font-bold">7일 평균 - ml</div>
+            <div id="weeklyAvgIntervalLabel" class="text-[11px] text-slate-400">평균 수유 텀: -</div>
+          </div>
+        </div>
+
+        <!-- 7일 분유량 차트 -->
+        <div>
+          <div class="text-xs text-slate-400 mb-2 flex justify-between">
+            <span>일별 총 수유량 (ml)</span>
+            <span class="text-sky-400 font-medium">하늘색 막대</span>
+          </div>
+          <div id="weeklyFeedChart" class="grid grid-cols-7 gap-2 h-28 items-end pt-4 px-1">
+            <!-- JS 막대 생성 -->
+          </div>
+        </div>
+
+        <!-- 7일 수면 시간 차트 -->
+        <div class="pt-2 border-t border-slate-100 dark:border-slate-800">
+          <div class="text-xs text-slate-400 mb-2 flex justify-between">
+            <span>일별 총 수면 시간 (시간)</span>
+            <span class="text-indigo-400 font-medium">보라색 막대</span>
+          </div>
+          <div id="weeklySleepChart" class="grid grid-cols-7 gap-2 h-28 items-end pt-4 px-1">
+            <!-- JS 막대 생성 -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 성장 기록 카드 (키 · 몸무게 · 머리둘레) -->
+      <div class="bg-white dark:bg-night-900 rounded-3xl p-4 border border-slate-200/80 dark:border-slate-800 space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="text-sm font-bold flex items-center gap-1.5">
+            <i class="fa-solid fa-ruler-vertical text-violet-400"></i> 성장 기록 (키 · 몸무게)
+          </h3>
+          <button onclick="openGrowthModal()" class="px-3 py-1.5 rounded-xl bg-violet-500/15 text-violet-500 dark:text-violet-400 text-xs font-bold">
+            + 측정 추가
+          </button>
+        </div>
+        <div class="grid grid-cols-3 gap-2 text-center">
+          <div class="bg-slate-50 dark:bg-night-800/70 rounded-2xl p-2.5">
+            <div class="text-[11px] text-slate-400">최근 몸무게</div>
+            <div id="latestWeightVal" class="text-base font-bold text-violet-500 dark:text-violet-400 mt-0.5">-</div>
+            <div id="latestWeightDiff" class="text-[10px] text-slate-400">-</div>
+          </div>
+          <div class="bg-slate-50 dark:bg-night-800/70 rounded-2xl p-2.5">
+            <div class="text-[11px] text-slate-400">최근 키</div>
+            <div id="latestHeightVal" class="text-base font-bold text-violet-500 dark:text-violet-400 mt-0.5">-</div>
+            <div id="latestHeightDiff" class="text-[10px] text-slate-400">-</div>
+          </div>
+          <div class="bg-slate-50 dark:bg-night-800/70 rounded-2xl p-2.5">
+            <div class="text-[11px] text-slate-400">머리둘레</div>
+            <div id="latestHeadVal" class="text-base font-bold text-violet-500 dark:text-violet-400 mt-0.5">-</div>
+            <div id="latestGrowthDate" class="text-[10px] text-slate-400">-</div>
+          </div>
+        </div>
+        <div id="growthHistoryList" class="space-y-1.5 pt-1">
+          <!-- 최근 성장 기록 리스트 -->
+        </div>
+      </div>
+
+      <!-- 최근 삭제함 (실수 삭제 복구) -->
+      <div class="bg-white dark:bg-night-900 rounded-3xl p-4 border border-slate-200/80 dark:border-slate-800 space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="text-sm font-bold flex items-center gap-1.5">
+            <i class="fa-solid fa-trash-can-arrow-up text-slate-400"></i> 최근 삭제함
+          </h3>
+          <span class="text-[11px] text-slate-400">실수로 지운 기록 복구</span>
+        </div>
+        <div id="trashLogsContainer" class="space-y-2">
+          <!-- 삭제된 항목 렌더링 -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 3: 설정 · 내보내기 ==================== -->
+    <section id="tab-settings" class="hidden space-y-4">
+      
+      <!-- 아기 프로필 & 수유 텀 설정 -->
+      <div class="bg-white dark:bg-night-900 rounded-3xl p-4 border border-slate-200/80 dark:border-slate-800 space-y-3">
+        <h3 class="text-sm font-bold">아기 기본 설정 (부부 공통 적용)</h3>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">아기 이름 / 태명</label>
+            <input id="settingBabyName" type="text" placeholder="예: 튼튼이" class="w-full px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-night-800 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">생년월일 (월령 계산)</label>
+            <input id="settingBabyBirth" type="date" class="w-full px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-night-800 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">목표 수유 텀 (시간)</label>
+            <input id="settingFeedInterval" type="number" step="0.5" min="1" max="8" value="3" class="w-full px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-night-800 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">기본 분유 1회량 (ml)</label>
+            <input id="settingDefaultMl" type="number" step="10" min="10" max="400" value="120" class="w-full px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-night-800 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+        </div>
+        <button onclick="saveBabySettings()" class="btn-thumb w-full rounded-2xl bg-indigo-500 hover:bg-indigo-600 text-white font-bold text-sm">
+          설정 저장 및 부부 동기화
+        </button>
+      </div>
+
+      <!-- 한 손 조작 및 홈 화면 맞춤 설정 -->
+      <div class="bg-white dark:bg-night-900 rounded-3xl p-4 border border-slate-200/80 dark:border-slate-800 space-y-3">
+        <h3 class="text-sm font-bold">한 손 조작 · 화면 맞춤 (내 기기 전용)</h3>
+        <label class="flex items-center justify-between py-1 cursor-pointer">
+          <div>
+            <div class="text-xs font-bold">왼손잡이 모드 (수유·수면 버튼 좌우 반전)</div>
+            <div class="text-[11px] text-slate-400">오른팔에 아기를 안고 왼손 엄지로 조작할 때 편리해요</div>
+          </div>
+          <input id="prefLeftHanded" type="checkbox" onchange="updateLocalPrefs()" class="w-5 h-5 accent-indigo-500 rounded">
+        </label>
+        <label class="flex items-center justify-between py-1 border-t border-slate-100 dark:border-slate-800 pt-3 cursor-pointer">
+          <div>
+            <div class="text-xs font-bold">홈 화면에 기저귀 버튼 표시</div>
+            <div class="text-[11px] text-slate-400">배변 패턴이 안정된 후 화면을 더 단순하게 쓰고 싶을 때 끄세요</div>
+          </div>
+          <input id="prefShowDiaper" type="checkbox" checked onchange="updateLocalPrefs()" class="w-5 h-5 accent-indigo-500 rounded">
+        </label>
+      </div>
+
+      <!-- 소아과 문진용 상태 요약 복사 -->
+      <div class="bg-white dark:bg-night-900 rounded-3xl p-4 border border-slate-200/80 dark:border-slate-800 space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="text-sm font-bold flex items-center gap-1.5">
+            <i class="fa-solid fa-stethoscope text-rose-400"></i> 소아과 문진용 요약 복사
+          </h3>
+          <span class="text-[11px] text-slate-400">진료 전 원클릭 복사</span>
+        </div>
+        <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+          아기 월령, 최근 24시간 총 수유량, 기저귀(소변/대변) 횟수, 최근 체온 및 투약 내역을 의사 선생님께 바로 보여드리거나 카톡에 붙여넣기 좋은 형태로 정리합니다.
+        </p>
+        <button onclick="copyPediatricSummary()" class="btn-thumb w-full rounded-2xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-600 dark:text-rose-400 font-bold text-sm flex items-center justify-center gap-2">
+          <i class="fa-regular fa-copy"></i> 오늘 상태 요약 텍스트 복사하기
+        </button>
+      </div>
+
+      <!-- 데이터 백업 및 DB 연결 정보 -->
+      <div class="bg-white dark:bg-night-900 rounded-3xl p-4 border border-slate-200/80 dark:border-slate-800 space-y-3">
+        <h3 class="text-sm font-bold">데이터 백업 및 서버 상태</h3>
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="exportToCSV()" class="btn-thumb w-full rounded-2xl bg-slate-100 dark:bg-night-800 hover:bg-slate-200 dark:hover:bg-slate-700 font-bold text-xs flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-file-csv text-emerald-500 text-sm"></i> CSV 전체 백업
+          </button>
+          <button onclick="printDailyReport()" class="btn-thumb w-full rounded-2xl bg-slate-100 dark:bg-night-800 hover:bg-slate-200 dark:hover:bg-slate-700 font-bold text-xs flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-print text-indigo-400 text-sm"></i> 일지 PDF 인쇄
+          </button>
+        </div>
+        <div class="p-3 rounded-2xl bg-slate-50 dark:bg-night-800/60 text-[11px] text-slate-500 dark:text-slate-400 space-y-1">
+          <div><b>연동 서버:</b> babytracker-bab4c-default-rtdb.firebaseio.com</div>
+          <div><b>데이터 경로:</b> /babyTracker/v1</div>
+          <div id="connectionDetailStatus"><b>상태:</b> 실시간 동기화 대기중...</div>
+        </div>
+      </div>
+
+      <p class="text-center text-[11px] text-slate-400 px-4 pb-4">
+        ※ 본 웹앱의 통계 및 수유 간격 안내는 육아 기록 보조용이며, 의학적 진단이나 처방을 대체하지 않습니다.
+      </p>
+    </section>
+
+  </main>
+
+  <!-- 하단 고정 3탭 내비게이션 바 (엄지 조작 최적화) -->
+  <nav class="fixed bottom-0 inset-x-0 z-30 bg-white/95 dark:bg-night-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 pb-safe">
+    <div class="max-w-lg mx-auto grid grid-cols-3 h-16">
+      <button onclick="switchTab('today')" id="nav-today" class="flex flex-col items-center justify-center gap-1 text-indigo-500 dark:text-indigo-400 font-bold">
+        <i class="fa-solid fa-house text-lg"></i>
+        <span class="text-[11px]">오늘 기록</span>
+      </button>
+      <button onclick="switchTab('stats')" id="nav-stats" class="flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+        <i class="fa-solid fa-chart-column text-lg"></i>
+        <span class="text-[11px]">타임라인·통계</span>
+      </button>
+      <button onclick="switchTab('settings')" id="nav-settings" class="flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+        <i class="fa-solid fa-sliders text-lg"></i>
+        <span class="text-[11px]">설정·내보내기</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ==================== MODAL 1: 수유 입력 (한 손 엄지 조작 최적화) ==================== -->
+  <div id="feedModal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-xs flex items-end sm:items-center justify-center">
+    <div class="bg-white dark:bg-night-900 w-full max-w-lg rounded-t-3xl sm:rounded-3xl p-5 space-y-4 border-t sm:border border-slate-200 dark:border-slate-800 animate-slide-up">
+      <div class="flex items-center justify-between">
+        <h3 class="font-bold text-lg flex items-center gap-2">
+          <i class="fa-solid fa-bottle-droplet text-sky-400"></i> 수유 기록하기
+        </h3>
+        <button onclick="closeModal('feedModal')" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-night-800 flex items-center justify-center text-slate-400">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- 수유 종류 선택 -->
+      <div class="grid grid-cols-4 gap-1.5">
+        <button type="button" onclick="selectFeedType('formula')" id="ftype-formula" class="py-3 rounded-2xl font-bold text-xs bg-sky-500 text-white">분유</button>
+        <button type="button" onclick="selectFeedType('pumped')" id="ftype-pumped" class="py-3 rounded-2xl font-bold text-xs bg-slate-100 dark:bg-night-800 text-slate-500">유축</button>
+        <button type="button" onclick="selectFeedType('breast')" id="ftype-breast" class="py-3 rounded-2xl font-bold text-xs bg-slate-100 dark:bg-night-800 text-slate-500">직수</button>
+        <button type="button" onclick="selectFeedType('solid')" id="ftype-solid" class="py-3 rounded-2xl font-bold text-xs bg-slate-100 dark:bg-night-800 text-slate-500">이유식</button>
+      </div>
+
+      <!-- 용량 조절 영역 (분유/유축/이유식) -->
+      <div id="feedVolumeSection" class="space-y-3">
+        <div class="flex items-center justify-between bg-slate-100 dark:bg-night-800 rounded-2xl p-3">
+          <button type="button" onclick="adjustFeedMl(-10)" class="btn-thumb w-14 h-14 rounded-xl bg-white dark:bg-night-900 font-bold text-lg shadow-xs">-10</button>
+          <div class="text-center">
+            <span id="feedMlDisplay" class="text-3xl font-extrabold text-sky-500 dark:text-sky-400">120</span>
+            <span id="feedUnitDisplay" class="text-base font-bold text-slate-400 ml-0.5">ml</span>
+          </div>
+          <button type="button" onclick="adjustFeedMl(10)" class="btn-thumb w-14 h-14 rounded-xl bg-white dark:bg-night-900 font-bold text-lg shadow-xs">+10</button>
+        </div>
+        <!-- 자주 쓰는 프리셋 칩 -->
+        <div class="grid grid-cols-5 gap-1.5">
+          <button type="button" onclick="setFeedMl(80)" class="py-2.5 rounded-xl bg-slate-100 dark:bg-night-800 text-xs font-bold hover:bg-sky-500/20">80ml</button>
+          <button type="button" onclick="setFeedMl(100)" class="py-2.5 rounded-xl bg-slate-100 dark:bg-night-800 text-xs font-bold hover:bg-sky-500/20">100ml</button>
+          <button type="button" onclick="setFeedMl(120)" class="py-2.5 rounded-xl bg-slate-100 dark:bg-night-800 text-xs font-bold hover:bg-sky-500/20">120ml</button>
+          <button type="button" onclick="setFeedMl(150)" class="py-2.5 rounded-xl bg-slate-100 dark:bg-night-800 text-xs font-bold hover:bg-sky-500/20">150ml</button>
+          <button type="button" onclick="setFeedMl(180)" class="py-2.5 rounded-xl bg-slate-100 dark:bg-night-800 text-xs font-bold hover:bg-sky-500/20">180ml</button>
+        </div>
+      </div>
+
+      <!-- 직수 시간 영역 (모유 직수 선택 시) -->
+      <div id="feedBreastSection" class="hidden grid grid-cols-2 gap-3">
+        <div class="bg-slate-100 dark:bg-night-800 p-3 rounded-2xl text-center space-y-2">
+          <div class="text-xs text-slate-400 font-bold">왼쪽 (분)</div>
+          <div class="flex items-center justify-center gap-3">
+            <button type="button" onclick="adjustBreastMin('left', -5)" class="w-10 h-10 rounded-xl bg-white dark:bg-night-900 font-bold">-5</button>
+            <span id="breastLeftDisplay" class="text-xl font-bold text-sky-400">10분</span>
+            <button type="button" onclick="adjustBreastMin('left', 5)" class="w-10 h-10 rounded-xl bg-white dark:bg-night-900 font-bold">+5</button>
+          </div>
+        </div>
+        <div class="bg-slate-100 dark:bg-night-800 p-3 rounded-2xl text-center space-y-2">
+          <div class="text-xs text-slate-400 font-bold">오른쪽 (분)</div>
+          <div class="flex items-center justify-center gap-3">
+            <button type="button" onclick="adjustBreastMin('right', -5)" class="w-10 h-10 rounded-xl bg-white dark:bg-night-900 font-bold">-5</button>
+            <span id="breastRightDisplay" class="text-xl font-bold text-sky-400">10분</span>
+            <button type="button" onclick="adjustBreastMin('right', 5)" class="w-10 h-10 rounded-xl bg-white dark:bg-night-900 font-bold">+5</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 빠른 시간 보정 (사후 입력 대응) -->
+      <div class="space-y-1.5">
+        <div class="flex items-center justify-between text-xs text-slate-400">
+          <span>수유 시각 보정</span>
+          <span id="feedTimePreview" class="text-sky-400 font-bold">방금 (현재 시각)</span>
+        </div>
+        <div class="grid grid-cols-4 gap-1.5">
+          <button type="button" onclick="setTimeOffset('feed', 0)" class="py-2 rounded-xl bg-sky-500/20 text-sky-400 text-xs font-bold">지금</button>
+          <button type="button" onclick="setTimeOffset('feed', -10)" class="py-2 rounded-xl bg-slate-100 dark:bg-night-800 text-xs font-medium">10분 전</button>
+          <button type="button" onclick="setTimeOffset('feed', -20)" class="py-2 rounded-xl bg-slate-100 dark:bg-night-800 text-xs font-medium">20분 전</button>
+          <button type="button" onclick="setTimeOffset('feed', -30)" class="py-2 rounded-xl bg-slate-100 dark:bg-night-800 text-xs font-medium">30분 전</button>
+        </div>
+      </div>
+
+      <!-- 선택 메모 (역류/트림 등) -->
+      <input id="feedMemoInput" type="text" placeholder="메모 (선택: 예 - 트림 완료, 살짝 역류)" class="w-full px-3.5 py-3 rounded-2xl bg-slate-100 dark:bg-night-800 text-sm focus:outline-none">
+
+      <button type="button" onclick="submitFeedLog()" class="btn-thumb w-full rounded-2xl bg-sky-500 hover:bg-sky-600 text-white font-bold text-base shadow-lg shadow-sky-500/25">
+        저장하기
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 2: 지난 수면 수동 입력 (자정 넘김 지원) ==================== -->
+  <div id="sleepManualModal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-xs flex items-end sm:items-center justify-center">
+    <div class="bg-white dark:bg-night-900 w-full max-w-lg rounded-t-3xl sm:rounded-3xl p-5 space-y-4 border-t sm:border border-slate-200 dark:border-slate-800">
+      <div class="flex items-center justify-between">
+        <h3 class="font-bold text-lg flex items-center gap-2">
+          <i class="fa-solid fa-moon text-indigo-400"></i> 지난 수면 기록 추가
+        </h3>
+        <button onclick="closeModal('sleepManualModal')" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-night-800 flex items-center justify-center text-slate-400">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-400">잠든 시각이 기상 시각보다 늦으면 자동으로 <b>어제 밤잠(자정 넘김)</b>으로 계산됩니다.</p>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">잠든 시각</label>
+          <input id="manualSleepStart" type="time" class="w-full px-3 py-3 rounded-2xl bg-slate-100 dark:bg-night-800 text-base font-bold">
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">일어난 시각</label>
+          <input id="manualSleepEnd" type="time" class="w-full px-3 py-3 rounded-2xl bg-slate-100 dark:bg-night-800 text-base font-bold">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2">
+        <button type="button" onclick="selectSleepKind('nap')" id="skind-nap" class="py-3 rounded-2xl font-bold text-sm bg-indigo-500 text-white">낮잠</button>
+        <button type="button" onclick="selectSleepKind('night')" id="skind-night" class="py-3 rounded-2xl font-bold text-sm bg-slate-100 dark:bg-night-800 text-slate-500">밤잠</button>
+      </div>
+
+      <button type="button" onclick="submitManualSleep()" class="btn-thumb w-full rounded-2xl bg-indigo-500 hover:bg-indigo-600 text-white font-bold text-base">
+        수면 기록 저장
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 3: 체온 · 투약 · 증상 기록 ==================== -->
+  <div id="healthModal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-xs flex items-end sm:items-center justify-center">
+    <div class="bg-white dark:bg-night-900 w-full max-w-lg rounded-t-3xl sm:rounded-3xl p-5 space-y-4 border-t sm:border border-slate-200 dark:border-slate-800">
+      <div class="flex items-center justify-between">
+        <h3 class="font-bold text-lg flex items-center gap-2">
+          <i class="fa-solid fa-thermometer text-rose-400"></i> 체온 · 투약 기록
+        </h3>
+        <button onclick="closeModal('healthModal')" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-night-800 flex items-center justify-center text-slate-400">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- 체온 조절 스텝퍼 -->
+      <div class="space-y-1.5">
+        <label class="text-xs text-slate-400 font-medium">체온 측정 (°C) - 37.5°C 이상 시 상단 발열 배너 자동 표시</label>
+        <div class="flex items-center justify-between bg-slate-100 dark:bg-night-800 rounded-2xl p-3">
+          <button type="button" onclick="adjustTemp(-0.1)" class="btn-thumb w-14 h-14 rounded-xl bg-white dark:bg-night-900 font-bold text-lg">-0.1</button>
+          <div class="text-center">
+            <span id="tempDisplay" class="text-3xl font-extrabold text-rose-500">36.8</span>
+            <span class="text-base font-bold text-slate-400">°C</span>
+          </div>
+          <button type="button" onclick="adjustTemp(0.1)" class="btn-thumb w-14 h-14 rounded-xl bg-white dark:bg-night-900 font-bold text-lg">+0.1</button>
+        </div>
+      </div>
+
+      <!-- 측정 부위 선택 -->
+      <div class="space-y-1.5">
+        <label class="text-xs text-slate-400 font-medium">측정 부위</label>
+        <div class="grid grid-cols-3 gap-1.5" id="measureSiteContainer">
+          <button type="button" onclick="selectMeasureSite(this, '귀(고막)')" class="py-2 rounded-xl text-xs font-bold bg-rose-500 text-white">귀(고막)</button>
+          <button type="button" onclick="selectMeasureSite(this, '이마')" class="py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400">이마</button>
+          <button type="button" onclick="selectMeasureSite(this, '겨드랑이')" class="py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400">겨드랑이</button>
+        </div>
+      </div>
+
+      <!-- 빠른 증상/투약 칩 -->
+      <div class="space-y-1.5">
+        <label class="text-xs text-slate-400 font-medium">투약 / 증상 빠른 선택 (선택사항)</label>
+        <div class="flex flex-wrap gap-1.5" id="healthTagContainer">
+          <button type="button" onclick="toggleHealthTag(this, '체온만 측정')" class="px-3 py-2 rounded-xl text-xs font-bold bg-rose-500 text-white">체온만 측정</button>
+          <button type="button" onclick="toggleHealthTag(this, '해열제 복용')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400">해열제 복용</button>
+          <button type="button" onclick="toggleHealthTag(this, '비타민D/유산균')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400">비타민D/유산균</button>
+          <button type="button" onclick="toggleHealthTag(this, '기침/콧물')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400">기침/콧물</button>
+          <button type="button" onclick="toggleHealthTag(this, '구토/설사')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400">구토/설사</button>
+        </div>
+      </div>
+
+      <input id="healthMemoInput" type="text" placeholder="약 용량이나 상세 증상 메모 (선택)" class="w-full px-3.5 py-3 rounded-2xl bg-slate-100 dark:bg-night-800 text-sm focus:outline-none">
+
+      <button type="button" onclick="submitHealthLog()" class="btn-thumb w-full rounded-2xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-base">
+        건강 기록 저장
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 4: 키 · 몸무게 · 머리둘레 성장 기록 ==================== -->
+  <div id="growthModal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-xs flex items-end sm:items-center justify-center">
+    <div class="bg-white dark:bg-night-900 w-full max-w-lg rounded-t-3xl sm:rounded-3xl p-5 space-y-4 border-t sm:border border-slate-200 dark:border-slate-800">
+      <div class="flex items-center justify-between">
+        <h3 class="font-bold text-lg flex items-center gap-2">
+          <i class="fa-solid fa-ruler-vertical text-violet-400"></i> 성장 기록하기
+        </h3>
+        <button onclick="closeModal('growthModal')" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-night-800 flex items-center justify-center text-slate-400">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-400">측정한 항목만 입력하셔도 됩니다. (키·몸무게 중 하나 이상 입력)</p>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">몸무게 (kg)</label>
+          <input id="growthWeightInput" type="number" step="0.01" min="0.5" max="30" placeholder="예: 6.45" class="w-full px-3.5 py-3 rounded-2xl bg-slate-100 dark:bg-night-800 text-base font-bold focus:outline-none focus:ring-2 focus:ring-violet-500">
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">키 / 신장 (cm)</label>
+          <input id="growthHeightInput" type="number" step="0.1" min="30" max="150" placeholder="예: 62.5" class="w-full px-3.5 py-3 rounded-2xl bg-slate-100 dark:bg-night-800 text-base font-bold focus:outline-none focus:ring-2 focus:ring-violet-500">
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs text-slate-400 mb-1">머리둘레 (cm, 선택)</label>
+        <input id="growthHeadInput" type="number" step="0.1" min="20" max="70" placeholder="예: 40.2" class="w-full px-3.5 py-3 rounded-2xl bg-slate-100 dark:bg-night-800 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-violet-500">
+      </div>
+
+      <input id="growthMemoInput" type="text" placeholder="메모 (선택: 예 - 영유아 검진, 예방접종일 측정)" class="w-full px-3.5 py-3 rounded-2xl bg-slate-100 dark:bg-night-800 text-sm focus:outline-none">
+
+      <button type="button" onclick="submitGrowthLog()" class="btn-thumb w-full rounded-2xl bg-violet-500 hover:bg-violet-600 text-white font-bold text-base">
+        성장 기록 저장
+      </button>
+    </div>
+  </div>
+
+  <!-- 하단 플로팅 토스트 메시지 (alert 대체 + 실행 취소 버튼 제공) -->
+  <div id="toastContainer" class="fixed bottom-20 inset-x-4 z-50 max-w-lg mx-auto pointer-events-none flex flex-col gap-2"></div>
+
+  <script>
+    /**
+     * ============================================================================
+     * 1. Firebase Realtime Database 초기화 및 전역 상태 관리
+     * ============================================================================
+     */
+    const FIREBASE_CONFIG = {
+      databaseURL: 'https://babytracker-bab4c-default-rtdb.firebaseio.com'
+    };
+
+    let db = null;
+    let logsRef = null;
+    let activeSleepRef = null;
+    let settingsRef = null;
+
+    // 앱 전역 상태
+    const state = {
+      role: localStorage.getItem('baby_parent_role') || '엄마', // '엄마' | '아빠'
+      logs: {},          // { id: { type, timestamp, ... } }
+      activeSleep: null, // { startTime, kind, author } | null
+      settings: {
+        babyName: '우리 아기',
+        babyBirth: '',
+        feedIntervalHours: 3,
+        defaultMl: 120
+      },
+      statsDate: getLocalDateString(new Date()), // YYYY-MM-DD
+      // 모달 임시 입력 상태
+      modalFeed: {
+        type: 'formula',
+        ml: 120,
+        leftMin: 10,
+        rightMin: 10,
+        offsetMin: 0
+      },
+      modalSleep: {
+        kind: 'nap'
+      },
+      modalHealth: {
+        temp: 36.8,
+        site: '귀(고막)',
+        tag: '체온만 측정'
+      },
+      prefs: {
+        leftHanded: localStorage.getItem('baby_pref_lefthanded') === 'true',
+        showDiaper: localStorage.getItem('baby_pref_showdiaper') !== 'false'
+      }
+    };
+
+    // Firebase 초기화 실행
+    function initFirebase() {
+      try {
+        firebase.initializeApp(FIREBASE_CONFIG);
+        db = firebase.database();
+
+        const rootPath = 'babyTracker/v1';
+        logsRef = db.ref(`${rootPath}/logs`);
+        activeSleepRef = db.ref(`${rootPath}/activeSleep`);
+        settingsRef = db.ref(`${rootPath}/settings`);
+
+        // 연결 상태 실시간 감지
+        db.ref('.info/connected').on('value', (snap) => {
+          const connected = snap.val() === true;
+          updateSyncUI(connected);
+        });
+
+        // 1) 전체 로그 실시간 구독 (부부 양쪽 폰 즉시 동기화)
+        logsRef.on('value', (snapshot) => {
+          state.logs = snapshot.val() || {};
+          renderAll();
+        }, (error) => {
+          console.error('Logs sync error:', error);
+          updateSyncUI(false, error.message);
+        });
+
+        // 2) 진행 중인 수면 타이머 실시간 구독
+        activeSleepRef.on('value', (snapshot) => {
+          state.activeSleep = snapshot.val() || null;
+          renderAll();
+        });
+
+        // 3) 아기 기본 설정 실시간 구독
+        settingsRef.on('value', (snapshot) => {
+          if (snapshot.exists()) {
+            state.settings = { ...state.settings, ...snapshot.val() };
+            syncSettingsInputs();
+            renderAll();
+          }
+        });
+
+      } catch (err) {
+        console.error('Firebase init failed:', err);
+        updateSyncUI(false, err.message);
+      }
+    }
+
+    /**
+     * ============================================================================
+     * 2. 유틸리티 함수 (날짜, 경과 시간, 자정 넘김 계산)
+     * ============================================================================
+     */
+    function getLocalDateString(dateObj) {
+      const y = dateObj.getFullYear();
+      const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const d = String(dateObj.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function formatTimeHM(timestamp) {
+      const d = new Date(timestamp);
+      return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    }
+
+    function formatDuration(ms) {
+      if (!ms || ms < 0) return '0분';
+      const totalMin = Math.floor(ms / 60000);
+      const h = Math.floor(totalMin / 60);
+      const m = totalMin % 60;
+      if (h > 0) return `${h}시간 ${m}분`;
+      return `${m}분`;
+    }
+
+    function formatDurationShort(ms) {
+      if (!ms || ms < 0) return '0h 0m';
+      const totalMin = Math.floor(ms / 60000);
+      const h = Math.floor(totalMin / 60);
+      const m = totalMin % 60;
+      return `${h}h ${m}m`;
+    }
+
+    // 자정을 넘긴 수면의 특정 날짜(dateStr)에 해당하는 수면 시간(ms) 계산
+    function getSleepOverlapMsForDate(startTime, endTime, targetDateStr) {
+      const dayStart = new Date(`${targetDateStr}T00:00:00`).getTime();
+      const dayEnd = dayStart + 24 * 60 * 60 * 1000;
+      const overlapStart = Math.max(startTime, dayStart);
+      const overlapEnd = Math.min(endTime, dayEnd);
+      return Math.max(0, overlapEnd - overlapStart);
+    }
+
+    // 활성(삭제되지 않은) 로그 배열 반환 (최신순)
+    function getActiveLogs() {
+      return Object.entries(state.logs)
+        .map(([id, item]) => ({ id, ...item }))
+        .filter(item => !item.deletedAt)
+        .sort((a, b) => b.timestamp - a.timestamp);
+    }
+
+    // 소프트 삭제된 로그 배열 반환
+    function getDeletedLogs() {
+      return Object.entries(state.logs)
+        .map(([id, item]) => ({ id, ...item }))
+        .filter(item => Boolean(item.deletedAt))
+        .sort((a, b) => b.deletedAt - a.deletedAt);
+    }
+
+    /**
+     * ============================================================================
+     * 3. 기록 생성 / 수정 / 소프트 삭제 / 복구 액션
+     * ============================================================================
+     */
+    // 수유 기록 저장
+    function submitFeedLog() {
+      const now = Date.now() + (state.modalFeed.offsetMin * 60000);
+      const memo = document.getElementById('feedMemoInput').value.trim();
+      const newLog = {
+        category: 'feed',
+        feedType: state.modalFeed.type, // 'formula' | 'pumped' | 'breast' | 'solid'
+        ml: state.modalFeed.type === 'breast' ? 0 : state.modalFeed.ml,
+        leftMin: state.modalFeed.type === 'breast' ? state.modalFeed.leftMin : 0,
+        rightMin: state.modalFeed.type === 'breast' ? state.modalFeed.rightMin : 0,
+        memo: memo,
+        timestamp: now,
+        author: state.role,
+        updatedAt: Date.now()
+      };
+
+      const ref = logsRef.push();
+      ref.set(newLog).then(() => {
+        document.getElementById('feedMemoInput').value = '';
+        closeModal('feedModal');
+        const typeNames = { formula: '분유', pumped: '유축', solid: '이유식' };
+        const desc = newLog.feedType === 'breast' 
+          ? `직수(좌${newLog.leftMin}분/우${newLog.rightMin}분)` 
+          : `${typeNames[newLog.feedType] || '분유'} ${newLog.ml}${newLog.feedType === 'solid' ? 'g' : 'ml'}`;
+        showToast(`${desc} 기록 완료`, ref.key);
+      });
+    }
+
+    // 직전 수유와 동일하게 1탭 즉시 저장
+    function instantRepeatLastFeed() {
+      const lastFeed = getActiveLogs().find(l => l.category === 'feed');
+      const feedType = lastFeed ? lastFeed.feedType : 'formula';
+      const ml = (lastFeed && lastFeed.ml > 0) ? lastFeed.ml : (state.settings.defaultMl || 120);
+      const newLog = {
+        category: 'feed',
+        feedType: feedType,
+        ml: feedType === 'breast' ? 0 : ml,
+        leftMin: feedType === 'breast' ? (lastFeed.leftMin || 10) : 0,
+        rightMin: feedType === 'breast' ? (lastFeed.rightMin || 10) : 0,
+        memo: '',
+        timestamp: Date.now(),
+        author: state.role,
+        updatedAt: Date.now()
+      };
+      const ref = logsRef.push();
+      ref.set(newLog).then(() => {
+        const typeNames = { formula: '분유', pumped: '유축', solid: '이유식' };
+        const desc = feedType === 'breast'
+          ? `직수(${newLog.leftMin + newLog.rightMin}분)`
+          : `${typeNames[feedType] || '분유'} ${newLog.ml}${feedType === 'solid' ? 'g' : 'ml'}`;
+        showToast(`⚡ ${desc} 1탭 저장 완료`, ref.key);
+      });
+    }
+
+    // 수면 타이머 시작/종료 토글
+    function toggleSleepTimer() {
+      if (!state.activeSleep) {
+        // 수면 시작
+        const hour = new Date().getHours();
+        const autoKind = (hour >= 19 || hour < 6) ? 'night' : 'nap';
+        activeSleepRef.set({
+          startTime: Date.now(),
+          kind: autoKind,
+          author: state.role
+        }).then(() => {
+          showToast(`${autoKind === 'night' ? '밤잠' : '낮잠'} 타이머를 시작했습니다.`);
+        });
+      } else {
+        // 수면 종료 및 로그 저장
+        const startTime = state.activeSleep.startTime;
+        const endTime = Date.now();
+        const durationMs = Math.max(60000, endTime - startTime); // 최소 1분 처리
+        const ref = logsRef.push();
+        const sleepLog = {
+          category: 'sleep',
+          sleepKind: state.activeSleep.kind || 'nap',
+          startTime: startTime,
+          endTime: endTime,
+          timestamp: endTime, // 타임라인 정렬 기준
+          durationMs: durationMs,
+          author: state.role,
+          updatedAt: Date.now()
+        };
+
+        Promise.all([
+          ref.set(sleepLog),
+          activeSleepRef.remove()
+        ]).then(() => {
+          showToast(`수면 종료 (${formatDuration(durationMs)}) 기록됨`, ref.key);
+        });
+      }
+    }
+
+    // 지난 수면 수동 입력 저장 (자정 넘김 자동 처리)
+    function submitManualSleep() {
+      const startVal = document.getElementById('manualSleepStart').value;
+      const endVal = document.getElementById('manualSleepEnd').value;
+      if (!startVal || !endVal) {
+        showToast('잠든 시각과 일어난 시각을 모두 선택해주세요.');
+        return;
+      }
+
+      const todayStr = getLocalDateString(new Date());
+      let startDate = new Date(`${todayStr}T${startVal}:00`);
+      let endDate = new Date(`${todayStr}T${endVal}:00`);
+
+      // 잠든 시각이 일어난 시각보다 늦으면 전날 밤에 잠든 것으로 간주 (예: 23:00 ~ 06:30)
+      if (startDate.getTime() >= endDate.getTime()) {
+        startDate.setDate(startDate.getDate() - 1);
+      }
+
+      const durationMs = endDate.getTime() - startDate.getTime();
+      const ref = logsRef.push();
+      ref.set({
+        category: 'sleep',
+        sleepKind: state.modalSleep.kind,
+        startTime: startDate.getTime(),
+        endTime: endDate.getTime(),
+        timestamp: endDate.getTime(),
+        durationMs: durationMs,
+        author: state.role,
+        updatedAt: Date.now()
+      }).then(() => {
+        closeModal('sleepManualModal');
+        showToast(`수면 ${formatDuration(durationMs)} 기록 완료`, ref.key);
+      });
+    }
+
+    // 기저귀 1탭 즉시 저장
+    function quickLogDiaper(diaperType) {
+      const labelMap = { pee: '소변', poo: '대변', both: '소변+대변' };
+      const ref = logsRef.push();
+      ref.set({
+        category: 'diaper',
+        diaperType: diaperType,
+        timestamp: Date.now(),
+        author: state.role,
+        updatedAt: Date.now()
+      }).then(() => {
+        showToast(`기저귀(${labelMap[diaperType]}) 기록됨`, ref.key);
+      });
+    }
+
+    // 체온 · 투약 저장
+    function submitHealthLog() {
+      const memo = document.getElementById('healthMemoInput').value.trim();
+      const ref = logsRef.push();
+      ref.set({
+        category: 'health',
+        temp: Number(state.modalHealth.temp.toFixed(1)),
+        measureSite: state.modalHealth.site,
+        tag: state.modalHealth.tag,
+        memo: memo,
+        timestamp: Date.now(),
+        author: state.role,
+        updatedAt: Date.now()
+      }).then(() => {
+        document.getElementById('healthMemoInput').value = '';
+        closeModal('healthModal');
+        showToast(`체온 ${state.modalHealth.temp.toFixed(1)}°C (${state.modalHealth.site}) 저장됨`, ref.key);
+      });
+    }
+
+    // 키 · 몸무게 · 머리둘레 성장 기록 저장
+    function submitGrowthLog() {
+      const weightVal = parseFloat(document.getElementById('growthWeightInput').value);
+      const heightVal = parseFloat(document.getElementById('growthHeightInput').value);
+      const headVal = parseFloat(document.getElementById('growthHeadInput').value);
+      const memo = document.getElementById('growthMemoInput').value.trim();
+
+      if (isNaN(weightVal) && isNaN(heightVal) && isNaN(headVal)) {
+        showToast('몸무게, 키, 머리둘레 중 하나 이상 입력해주세요.');
+        return;
+      }
+
+      const ref = logsRef.push();
+      ref.set({
+        category: 'growth',
+        weightKg: isNaN(weightVal) ? null : Number(weightVal.toFixed(2)),
+        heightCm: isNaN(heightVal) ? null : Number(heightVal.toFixed(1)),
+        headCm: isNaN(headVal) ? null : Number(headVal.toFixed(1)),
+        memo: memo,
+        timestamp: Date.now(),
+        author: state.role,
+        updatedAt: Date.now()
+      }).then(() => {
+        document.getElementById('growthWeightInput').value = '';
+        document.getElementById('growthHeightInput').value = '';
+        document.getElementById('growthHeadInput').value = '';
+        document.getElementById('growthMemoInput').value = '';
+        closeModal('growthModal');
+        const parts = [];
+        if (!isNaN(weightVal)) parts.push(`${weightVal}kg`);
+        if (!isNaN(heightVal)) parts.push(`${heightVal}cm`);
+        if (!isNaN(headVal)) parts.push(`머리 ${headVal}cm`);
+        showToast(`성장 기록(${parts.join(' / ')}) 저장 완료`, ref.key);
+      });
+    }
+
+    // 소프트 삭제 (실수 삭제 복구 지원)
+    function softDeleteLog(logId) {
+      logsRef.child(logId).update({
+        deletedAt: Date.now(),
+        deletedBy: state.role
+      }).then(() => {
+        showToast('기록이 삭제되었습니다.', logId, true);
+      });
+    }
+
+    // 삭제된 기록 복구
+    function restoreLog(logId) {
+      logsRef.child(logId).update({
+        deletedAt: null,
+        deletedBy: null,
+        updatedAt: Date.now()
+      }).then(() => {
+        showToast('기록이 복구되었습니다.');
+      });
+    }
+
+    // 아기 기본 설정 저장
+    function saveBabySettings() {
+      const babyName = document.getElementById('settingBabyName').value.trim() || '우리 아기';
+      const babyBirth = document.getElementById('settingBabyBirth').value;
+      const feedIntervalHours = parseFloat(document.getElementById('settingFeedInterval').value) || 3;
+      const defaultMl = parseInt(document.getElementById('settingDefaultMl').value, 10) || 120;
+
+      settingsRef.set({
+        babyName,
+        babyBirth,
+        feedIntervalHours,
+        defaultMl
+      }).then(() => {
+        state.modalFeed.ml = defaultMl;
+        showToast('설정이 저장되어 부부 기기에 동기화되었습니다.');
+      });
+    }
+
+    /**
+     * ============================================================================
+     * 4. UI 렌더링 엔진 (대시보드, 타임라인, 7일 차트, 문진 요약)
+     * ============================================================================
+     */
+    function renderAll() {
+      const now = Date.now();
+      const todayStr = getLocalDateString(new Date(now));
+      const allLogs = getActiveLogs();
+
+      // 헤더 날짜 & 아기 이름
+      document.getElementById('headerBabyName').textContent = state.settings.babyName || '우리 아기';
+      const dObj = new Date();
+      const days = ['일', '월', '화', '수', '목', '금', '토'];
+      document.getElementById('headerDate').textContent = `${dObj.getMonth() + 1}월 ${dObj.getDate()}일 (${days[dObj.getDay()]})`;
+
+      // 직전 수유량 프리셋 업데이트
+      const lastFeed = allLogs.find(l => l.category === 'feed');
+      const presetMl = (lastFeed && lastFeed.ml > 0) ? lastFeed.ml : (state.settings.defaultMl || 120);
+      document.getElementById('quickRepeatFeedBadge').textContent = `${presetMl}ml`;
+      const repeatLabelEl = document.getElementById('instantRepeatLabel');
+      if (lastFeed) {
+        const typeNames = { formula: '분유', pumped: '유축', solid: '이유식' };
+        const txt = lastFeed.feedType === 'breast'
+          ? `모유 직수 ${lastFeed.leftMin + lastFeed.rightMin}분`
+          : `${typeNames[lastFeed.feedType] || '분유'} ${lastFeed.ml}${lastFeed.feedType === 'solid' ? 'g' : 'ml'}`;
+        repeatLabelEl.textContent = `방금 전과 동일하게 1탭 저장 (${txt})`;
+      } else {
+        repeatLabelEl.textContent = `기본 설정으로 1탭 저장 (분유 ${presetMl}ml)`;
+      }
+
+      // 1) 마지막 수유 카드 업데이트
+      if (lastFeed) {
+        const elapsed = now - lastFeed.timestamp;
+        document.getElementById('lastFeedElapsed').textContent = `${formatDuration(elapsed)} 전`;
+        document.getElementById('lastFeedAuthor').textContent = lastFeed.author || '-';
+        const typeNames = { formula: '분유', pumped: '유축', solid: '이유식' };
+        const typeStr = lastFeed.feedType === 'breast' 
+          ? `직수 ${lastFeed.leftMin + lastFeed.rightMin}분` 
+          : `${typeNames[lastFeed.feedType] || '분유'} ${lastFeed.ml}${lastFeed.feedType === 'solid' ? 'g' : 'ml'}`;
+        document.getElementById('lastFeedDetail').textContent = `${formatTimeHM(lastFeed.timestamp)} · ${typeStr}`;
+
+        const nextTime = lastFeed.timestamp + (state.settings.feedIntervalHours * 3600000);
+        const remainMs = nextTime - now;
+        const nextHintEl = document.getElementById('nextFeedHint');
+        if (remainMs > 0) {
+          nextHintEl.textContent = `다음 수유까지 ${formatDuration(remainMs)} (${formatTimeHM(nextTime)})`;
+          nextHintEl.className = 'mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/80 text-[11px] text-sky-500 font-medium';
+        } else {
+          nextHintEl.textContent = `수유 예정 시각이 ${formatDuration(Math.abs(remainMs))} 지났어요`;
+          nextHintEl.className = 'mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/80 text-[11px] text-amber-500 font-bold';
+        }
+      } else {
+        document.getElementById('lastFeedElapsed').textContent = '기록 없음';
+        document.getElementById('lastFeedDetail').textContent = '첫 수유를 기록해보세요';
+        document.getElementById('nextFeedHint').textContent = '예상 다음 수유: -';
+      }
+
+      // 2) 수면 상태 및 타이머 버튼 업데이트
+      const mainSleepBtn = document.getElementById('mainSleepToggleBtn');
+      const mainSleepBtnText = document.getElementById('mainSleepBtnText');
+      const mainSleepSubBadge = document.getElementById('mainSleepSubBadge');
+      const sleepStatusTitle = document.getElementById('sleepStatusTitle');
+      const sleepTimerDisplay = document.getElementById('sleepTimerDisplay');
+      const lastSleepDetail = document.getElementById('lastSleepDetail');
+      const sleepAuthorBadge = document.getElementById('sleepAuthorBadge');
+
+      if (state.activeSleep) {
+        // 현재 자는 중
+        const sleepingMs = now - state.activeSleep.startTime;
+        sleepStatusTitle.innerHTML = `<i class="fa-solid fa-bed text-emerald-400 animate-pulse"></i> ${state.activeSleep.kind === 'night' ? '밤잠 자는 중' : '낮잠 자는 중'}`;
+        sleepTimerDisplay.textContent = formatDuration(sleepingMs);
+        sleepTimerDisplay.className = 'text-xl font-bold tracking-tight text-emerald-400 my-0.5';
+        lastSleepDetail.textContent = `${formatTimeHM(state.activeSleep.startTime)}부터 수면 시작`;
+        sleepAuthorBadge.textContent = state.activeSleep.author || '-';
+
+        mainSleepBtn.className = 'btn-thumb flex-1 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white p-3 flex flex-col justify-between items-start shadow-lg shadow-emerald-500/25';
+        mainSleepBtnText.textContent = '일어남 (수면 종료)';
+        mainSleepSubBadge.textContent = '진행중';
+      } else {
+        // 깨어 있는 중
+        const lastSleep = allLogs.find(l => l.category === 'sleep');
+        sleepStatusTitle.innerHTML = `<i class="fa-solid fa-sun text-amber-400"></i> 깨어있는 중`;
+        sleepTimerDisplay.className = 'text-xl font-bold tracking-tight text-indigo-500 dark:text-indigo-400 my-0.5';
+        if (lastSleep) {
+          const awakeMs = now - lastSleep.endTime;
+          sleepTimerDisplay.textContent = formatDuration(awakeMs);
+          lastSleepDetail.textContent = `직전 수면 ${formatDuration(lastSleep.durationMs)} (${formatTimeHM(lastSleep.endTime)} 기상)`;
+          sleepAuthorBadge.textContent = lastSleep.author || '-';
+        } else {
+          sleepTimerDisplay.textContent = '대기중';
+          lastSleepDetail.textContent = '잠들기 버튼을 눌러 시작';
+          sleepAuthorBadge.textContent = '-';
+        }
+
+        mainSleepBtn.className = 'btn-thumb flex-1 rounded-2xl bg-indigo-500 hover:bg-indigo-600 text-white p-3 flex flex-col justify-between items-start shadow-lg shadow-indigo-500/20';
+        mainSleepBtnText.textContent = '잠들기 시작';
+        mainSleepSubBadge.textContent = '타이머';
+      }
+
+      // 3) 오늘 누적 집계 계산
+      const todayLogs = allLogs.filter(l => getLocalDateString(new Date(l.timestamp)) === todayStr);
+      let todayMl = 0;
+      let todayFeedCnt = 0;
+      let todayPeeCnt = 0;
+      let todayPooCnt = 0;
+      let lastDiaperLog = null;
+      let feverLogToday = null;
+
+      todayLogs.forEach(l => {
+        if (l.category === 'feed') {
+          todayFeedCnt++;
+          todayMl += (l.ml || 0);
+        } else if (l.category === 'diaper') {
+          if (l.diaperType === 'pee' || l.diaperType === 'both') todayPeeCnt++;
+          if (l.diaperType === 'poo' || l.diaperType === 'both') todayPooCnt++;
+          if (!lastDiaperLog) lastDiaperLog = l;
+        } else if (l.category === 'health' && l.temp >= 37.5) {
+          if (!feverLogToday || l.temp > feverLogToday.temp) feverLogToday = l;
+        }
+      });
+
+      // 오늘 총 수면 시간 (자정 넘긴 수면 포함 + 현재 자는 중 시간 포함)
+      let todaySleepMs = 0;
+      let napCount = 0;
+      let nightCount = 0;
+      allLogs.filter(l => l.category === 'sleep').forEach(s => {
+        const overlap = getSleepOverlapMsForDate(s.startTime, s.endTime, todayStr);
+        if (overlap > 0) {
+          todaySleepMs += overlap;
+          if (s.sleepKind === 'night') nightCount++;
+          else napCount++;
+        }
+      });
+      if (state.activeSleep) {
+        todaySleepMs += getSleepOverlapMsForDate(state.activeSleep.startTime, now, todayStr);
+      }
+
+      document.getElementById('statTotalMl').textContent = `${todayMl}ml`;
+      document.getElementById('statFeedCount').textContent = `${todayFeedCnt}회`;
+      document.getElementById('statTotalSleep').textContent = formatDurationShort(todaySleepMs);
+      document.getElementById('todayTotalSleepMini').textContent = formatDuration(todaySleepMs);
+      document.getElementById('statNapNight').textContent = `낮${napCount} / 밤${nightCount}`;
+      document.getElementById('statPeeCount').textContent = `${todayPeeCnt}회`;
+      document.getElementById('statPooCount').textContent = `${todayPooCnt}회`;
+      document.getElementById('statLastDiaper').textContent = lastDiaperLog ? formatTimeHM(lastDiaperLog.timestamp) : '-';
+
+      // 발열 배너 표시 여부
+      const feverBanner = document.getElementById('feverAlertBanner');
+      if (feverLogToday) {
+        feverBanner.classList.remove('hidden');
+        document.getElementById('feverAlertText').textContent = `오늘 최고 체온 ${feverLogToday.temp}°C (${formatTimeHM(feverLogToday.timestamp)}) 기록됨`;
+      } else {
+        feverBanner.classList.add('hidden');
+      }
+
+      // 4) 오늘 기록 피드 리스트 렌더링
+      renderTodayFeedList(todayLogs);
+
+      // 5) 통계 탭 & 삭제함 렌더링
+      renderStatsTab(allLogs);
+      renderTrashList();
+    }
+
+    function renderTodayFeedList(todayLogs) {
+      const container = document.getElementById('todayLogsContainer');
+      document.getElementById('todayLogCountLabel').textContent = `총 ${todayLogs.length}건`;
+
+      if (todayLogs.length === 0) {
+        container.innerHTML = `
+          <div class="bg-white dark:bg-night-900 rounded-3xl p-8 text-center border border-dashed border-slate-200 dark:border-slate-800 text-slate-400 text-xs">
+            아직 오늘 기록이 없습니다.<br>위 버튼을 한 번 눌러 첫 기록을 남겨보세요!
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = todayLogs.map(log => {
+        let iconHtml = '';
+        let title = '';
+        let sub = '';
+
+        if (log.category === 'feed') {
+          iconHtml = `<div class="w-10 h-10 rounded-2xl bg-sky-500/15 text-sky-400 flex items-center justify-center"><i class="fa-solid fa-bottle-droplet"></i></div>`;
+          if (log.feedType === 'breast') {
+            title = `모유 직수 (좌 ${log.leftMin}분 / 우 ${log.rightMin}분)`;
+          } else {
+            const typeNames = { formula: '분유', pumped: '유축 모유', solid: '이유식' };
+            title = `${typeNames[log.feedType] || '분유'} ${log.ml}${log.feedType === 'solid' ? 'g' : 'ml'}`;
+          }
+          sub = log.memo ? log.memo : '수유 완료';
+        } else if (log.category === 'sleep') {
+          iconHtml = `<div class="w-10 h-10 rounded-2xl bg-indigo-500/15 text-indigo-400 flex items-center justify-center"><i class="fa-solid fa-moon"></i></div>`;
+          title = `${log.sleepKind === 'night' ? '밤잠' : '낮잠'} ${formatDuration(log.durationMs)}`;
+          sub = `${formatTimeHM(log.startTime)} ~ ${formatTimeHM(log.endTime)}`;
+        } else if (log.category === 'diaper') {
+          const map = { pee: '기저귀 · 소변', poo: '기저귀 · 대변', both: '기저귀 · 소변+대변' };
+          iconHtml = `<div class="w-10 h-10 rounded-2xl bg-amber-500/15 text-amber-400 flex items-center justify-center"><i class="fa-solid fa-baby-carriage"></i></div>`;
+          title = map[log.diaperType] || '기저귀 교체';
+          sub = '교체 완료';
+        } else if (log.category === 'health') {
+          const isFever = log.temp >= 37.5;
+          iconHtml = `<div class="w-10 h-10 rounded-2xl ${isFever ? 'bg-rose-500 text-white' : 'bg-rose-500/15 text-rose-400'} flex items-center justify-center"><i class="fa-solid fa-thermometer"></i></div>`;
+          title = `체온 ${log.temp}°C (${log.measureSite || '귀'}) · ${log.tag}`;
+          sub = log.memo || (isFever ? '발열 주의 관찰' : '정상 범위');
+        } else if (log.category === 'growth') {
+          iconHtml = `<div class="w-10 h-10 rounded-2xl bg-violet-500/15 text-violet-400 flex items-center justify-center"><i class="fa-solid fa-ruler-vertical"></i></div>`;
+          const parts = [];
+          if (log.weightKg) parts.push(`${log.weightKg}kg`);
+          if (log.heightCm) parts.push(`${log.heightCm}cm`);
+          if (log.headCm) parts.push(`머리 ${log.headCm}cm`);
+          title = `성장 기록 · ${parts.join(' / ')}`;
+          sub = log.memo || '키·몸무게 측정';
+        }
+
+        const authorColor = log.author === '아빠' ? 'text-sky-400 bg-sky-500/10' : 'text-rose-400 bg-rose-500/10';
+
+        return `
+          <div class="bg-white dark:bg-night-900 rounded-2xl p-3 border border-slate-200/70 dark:border-slate-800 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+              ${iconHtml}
+              <div class="min-w-0">
+                <div class="font-bold text-sm truncate">${title}</div>
+                <div class="text-xs text-slate-400 truncate">${formatTimeHM(log.timestamp)} · ${sub}</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="text-[11px] font-bold px-2 py-0.5 rounded-lg ${authorColor}">${log.author || '엄마'}</span>
+              <button onclick="softDeleteLog('${log.id}')" aria-label="삭제" class="w-9 h-9 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-slate-100 dark:hover:bg-night-800 flex items-center justify-center">
+                <i class="fa-regular fa-trash-can text-xs"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderStatsTab(allLogs) {
+      const targetStr = state.statsDate;
+      const todayStr = getLocalDateString(new Date());
+      document.getElementById('statsDateLabel').textContent = targetStr;
+      document.getElementById('statsDateSub').textContent = targetStr === todayStr ? '오늘' : '선택한 날짜';
+
+      // 1) 24시간 타임바 렌더링
+      const timeBar = document.getElementById('dailyTimeBar');
+      const dayStartMs = new Date(`${targetStr}T00:00:00`).getTime();
+      const dayTotalMs = 24 * 3600 * 1000;
+      let barHtml = '';
+
+      // 수면 블록 (자정 넘김 포함)
+      let daySleepTotal = 0;
+      allLogs.filter(l => l.category === 'sleep').forEach(s => {
+        const overlap = getSleepOverlapMsForDate(s.startTime, s.endTime, targetStr);
+        if (overlap > 0) {
+          daySleepTotal += overlap;
+          const clampedStart = Math.max(s.startTime, dayStartMs);
+          const leftPct = ((clampedStart - dayStartMs) / dayTotalMs) * 100;
+          const widthPct = Math.max(1.2, (overlap / dayTotalMs) * 100);
+          barHtml += `<div style="left:${leftPct}%; width:${widthPct}%" class="absolute top-0 bottom-0 bg-indigo-500/80" title="수면 ${formatDuration(overlap)}"></div>`;
+        }
+      });
+
+      // 수유 및 기저귀 마커
+      let dayFeedMl = 0;
+      let dayFeedCount = 0;
+      allLogs.filter(l => getLocalDateString(new Date(l.timestamp)) === targetStr).forEach(l => {
+        const leftPct = ((l.timestamp - dayStartMs) / dayTotalMs) * 100;
+        if (l.category === 'feed') {
+          dayFeedMl += (l.ml || 0);
+          dayFeedCount++;
+          barHtml += `<div style="left:${leftPct}%" class="absolute top-1 bottom-1 w-1.5 -ml-0.5 rounded-full bg-sky-400 shadow-xs" title="수유 ${l.ml}ml"></div>`;
+        } else if (l.category === 'diaper') {
+          barHtml += `<div style="left:${leftPct}%" class="absolute bottom-1 h-2.5 w-1.5 -ml-0.5 rounded-full bg-amber-400" title="기저귀"></div>`;
+        }
+      });
+
+      timeBar.innerHTML = barHtml;
+      document.getElementById('selectedDaySummaryText').innerHTML = 
+        `<b>${targetStr}</b> 요약: 총 수유 <b>${dayFeedMl}ml</b> (${dayFeedCount}회) · 총 수면 <b>${formatDuration(daySleepTotal)}</b>`;
+
+      // 2) 최근 7일 주간 차트 렌더링
+      const feedChartEl = document.getElementById('weeklyFeedChart');
+      const sleepChartEl = document.getElementById('weeklySleepChart');
+      const last7Days = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const dStr = getLocalDateString(d);
+        const dLogs = allLogs.filter(l => getLocalDateString(new Date(l.timestamp)) === dStr);
+        const ml = dLogs.filter(l => l.category === 'feed').reduce((acc, cur) => acc + (cur.ml || 0), 0);
+        let sleepMs = 0;
+        allLogs.filter(l => l.category === 'sleep').forEach(s => {
+          sleepMs += getSleepOverlapMsForDate(s.startTime, s.endTime, dStr);
+        });
+        last7Days.push({
+          label: `${d.getMonth() + 1}/${d.getDate()}`,
+          ml,
+          sleepHours: +(sleepMs / 3600000).toFixed(1)
+        });
+      }
+
+      const maxMl = Math.max(800, ...last7Days.map(d => d.ml));
+      const maxSleep = Math.max(16, ...last7Days.map(d => d.sleepHours));
+      const avgMl = Math.round(last7Days.reduce((a, b) => a + b.ml, 0) / 7);
+      document.getElementById('weeklyAvgLabel').textContent = `7일 평균 ${avgMl}ml/일`;
+
+      // 최근 7일 평균 수유 텀 계산
+      const weekAgoMs = Date.now() - 7 * 24 * 3600000;
+      const weekFeeds = allLogs
+        .filter(l => l.category === 'feed' && l.timestamp >= weekAgoMs)
+        .sort((a, b) => a.timestamp - b.timestamp);
+      let intervalSum = 0;
+      let intervalCount = 0;
+      for (let i = 1; i < weekFeeds.length; i++) {
+        const diff = weekFeeds[i].timestamp - weekFeeds[i - 1].timestamp;
+        // 30분 이상 ~ 12시간 이하 간격만 정상 수유 텀으로 합산
+        if (diff >= 30 * 60000 && diff <= 12 * 3600000) {
+          intervalSum += diff;
+          intervalCount++;
+        }
+      }
+      document.getElementById('weeklyAvgIntervalLabel').textContent = intervalCount > 0
+        ? `평균 수유 텀: ${formatDuration(intervalSum / intervalCount)}`
+        : '평균 수유 텀: 데이터 수집중';
+
+      feedChartEl.innerHTML = last7Days.map(d => {
+        const hPct = Math.round((d.ml / maxMl) * 100);
+        return `
+          <div class="flex flex-col items-center gap-1 h-full justify-end">
+            <span class="text-[9px] text-slate-400 font-medium">${d.ml > 0 ? d.ml : ''}</span>
+            <div class="w-full bg-slate-100 dark:bg-night-800 rounded-t-lg h-20 flex items-end overflow-hidden">
+              <div style="height:${hPct}%" class="w-full bg-sky-400 rounded-t-lg transition-all duration-300"></div>
+            </div>
+            <span class="text-[10px] text-slate-400">${d.label}</span>
+          </div>`;
+      }).join('');
+
+      sleepChartEl.innerHTML = last7Days.map(d => {
+        const hPct = Math.round((d.sleepHours / maxSleep) * 100);
+        return `
+          <div class="flex flex-col items-center gap-1 h-full justify-end">
+            <span class="text-[9px] text-slate-400 font-medium">${d.sleepHours > 0 ? d.sleepHours + 'h' : ''}</span>
+            <div class="w-full bg-slate-100 dark:bg-night-800 rounded-t-lg h-20 flex items-end overflow-hidden">
+              <div style="height:${hPct}%" class="w-full bg-indigo-500 rounded-t-lg transition-all duration-300"></div>
+            </div>
+            <span class="text-[10px] text-slate-400">${d.label}</span>
+          </div>`;
+      }).join('');
+
+      // 3) 성장 기록 카드 렌더링
+      renderGrowthSection(allLogs);
+    }
+
+    function renderGrowthSection(allLogs) {
+      const growthLogs = allLogs.filter(l => l.category === 'growth');
+      const latestWeight = growthLogs.find(g => g.weightKg != null);
+      const prevWeight = growthLogs.filter(g => g.weightKg != null)[1];
+      const latestHeight = growthLogs.find(g => g.heightCm != null);
+      const prevHeight = growthLogs.filter(g => g.heightCm != null)[1];
+      const latestHead = growthLogs.find(g => g.headCm != null);
+
+      document.getElementById('latestWeightVal').textContent = latestWeight ? `${latestWeight.weightKg}kg` : '-';
+      document.getElementById('latestWeightDiff').textContent = (latestWeight && prevWeight)
+        ? `${(latestWeight.weightKg - prevWeight.weightKg) >= 0 ? '+' : ''}${(latestWeight.weightKg - prevWeight.weightKg).toFixed(2)}kg`
+        : '이전 기록 없음';
+
+      document.getElementById('latestHeightVal').textContent = latestHeight ? `${latestHeight.heightCm}cm` : '-';
+      document.getElementById('latestHeightDiff').textContent = (latestHeight && prevHeight)
+        ? `${(latestHeight.heightCm - prevHeight.heightCm) >= 0 ? '+' : ''}${(latestHeight.heightCm - prevHeight.heightCm).toFixed(1)}cm`
+        : '이전 기록 없음';
+
+      document.getElementById('latestHeadVal').textContent = latestHead ? `${latestHead.headCm}cm` : '-';
+      document.getElementById('latestGrowthDate').textContent = growthLogs[0]
+        ? getLocalDateString(new Date(growthLogs[0].timestamp))
+        : '-';
+
+      const listEl = document.getElementById('growthHistoryList');
+      if (growthLogs.length === 0) {
+        listEl.innerHTML = `<div class="text-xs text-slate-400 text-center py-2">아직 키·몸무게 기록이 없습니다.</div>`;
+        return;
+      }
+      listEl.innerHTML = growthLogs.slice(0, 5).map(g => {
+        const parts = [];
+        if (g.weightKg != null) parts.push(`몸무게 <b>${g.weightKg}kg</b>`);
+        if (g.heightCm != null) parts.push(`키 <b>${g.heightCm}cm</b>`);
+        if (g.headCm != null) parts.push(`머리둘레 <b>${g.headCm}cm</b>`);
+        return `
+          <div class="flex items-center justify-between text-xs bg-slate-50 dark:bg-night-800/60 px-3 py-2 rounded-xl">
+            <div class="min-w-0">
+              <span class="text-slate-400 mr-1.5">${getLocalDateString(new Date(g.timestamp))}</span>
+              <span>${parts.join(' · ')}</span>
+            </div>
+            <button onclick="softDeleteLog('${g.id}')" class="text-slate-400 hover:text-rose-400 pl-2"><i class="fa-regular fa-trash-can"></i></button>
+          </div>`;
+      }).join('');
+    }
+
+    function renderTrashList() {
+      const deleted = getDeletedLogs().slice(0, 10);
+      const container = document.getElementById('trashLogsContainer');
+      if (deleted.length === 0) {
+        container.innerHTML = `<div class="text-xs text-slate-400 text-center py-3">최근 삭제된 기록이 없습니다.</div>`;
+        return;
+      }
+      container.innerHTML = deleted.map(item => {
+        let label = item.category;
+        if (item.category === 'feed') label = `수유 ${item.ml || 0}ml`;
+        if (item.category === 'sleep') label = `수면 ${formatDuration(item.durationMs)}`;
+        if (item.category === 'diaper') label = `기저귀(${item.diaperType})`;
+        if (item.category === 'health') label = `체온 ${item.temp}°C`;
+        if (item.category === 'growth') label = `성장(${item.weightKg ? item.weightKg + 'kg' : ''} ${item.heightCm ? item.heightCm + 'cm' : ''})`;
+        return `
+          <div class="flex items-center justify-between text-xs bg-slate-50 dark:bg-night-800/60 p-2.5 rounded-xl">
+            <span class="text-slate-400">${formatTimeHM(item.timestamp)} · <b>${label}</b></span>
+            <button onclick="restoreLog('${item.id}')" class="px-2.5 py-1 rounded-lg bg-indigo-500/20 text-indigo-400 font-bold">복구</button>
+          </div>`;
+      }).join('');
+    }
+
+    /**
+     * ============================================================================
+     * 5. 소아과 문진용 요약 복사 & CSV 백업 내보내기
+     * ============================================================================
+     */
+    function copyPediatricSummary() {
+      const now = Date.now();
+      const allLogs = getActiveLogs();
+      const last24hLogs = allLogs.filter(l => (now - l.timestamp) <= 24 * 3600000);
+      const totalMl24 = last24hLogs.filter(l => l.category === 'feed').reduce((a, b) => a + (b.ml || 0), 0);
+      const feedCnt24 = last24hLogs.filter(l => l.category === 'feed').length;
+      const peeCnt24 = last24hLogs.filter(l => l.category === 'diaper' && (l.diaperType === 'pee' || l.diaperType === 'both')).length;
+      const pooCnt24 = last24hLogs.filter(l => l.category === 'diaper' && (l.diaperType === 'poo' || l.diaperType === 'both')).length;
+      const healthLogs = last24hLogs.filter(l => l.category === 'health');
+
+      // 최근 7일 일평균 수유량과 비교
+      const weekAgoMs = now - 7 * 24 * 3600000;
+      const weekTotalMl = allLogs.filter(l => l.category === 'feed' && l.timestamp >= weekAgoMs).reduce((a, b) => a + (b.ml || 0), 0);
+      const avgDailyMl = Math.round(weekTotalMl / 7);
+      const compareText = avgDailyMl > 0 ? ` (평소 7일 평균 ${avgDailyMl}ml 대비 ${Math.round((totalMl24 / avgDailyMl) * 100)}%)` : '';
+
+      // 최근 키·몸무게
+      const latestW = allLogs.find(l => l.category === 'growth' && l.weightKg != null);
+      const latestH = allLogs.find(l => l.category === 'growth' && l.heightCm != null);
+      const growthText = (latestW || latestH)
+        ? `${latestW ? latestW.weightKg + 'kg' : '-'} / ${latestH ? latestH.heightCm + 'cm' : '-'}`
+        : '미기록';
+
+      let ageText = '';
+      if (state.settings.babyBirth) {
+        const birth = new Date(state.settings.babyBirth);
+        const diffDays = Math.floor((now - birth.getTime()) / (24 * 3600000));
+        ageText = ` (생후 ${diffDays}일 / 약 ${Math.floor(diffDays / 30)}개월)`;
+      }
+
+      let healthText = '특이 체온/투약 기록 없음';
+      if (healthLogs.length > 0) {
+        const maxTempLog = healthLogs.reduce((max, cur) => cur.temp > max.temp ? cur : max, healthLogs[0]);
+        healthText = `최고 체온: ${maxTempLog.temp}°C (${maxTempLog.measureSite || '귀'}, ${formatTimeHM(maxTempLog.timestamp)})\n` +
+          healthLogs.map(h => `- ${formatTimeHM(h.timestamp)}: ${h.temp}°C [${h.measureSite || '귀'}] (${h.tag}${h.memo ? ', ' + h.memo : ''})`).join('\n');
+      }
+
+      const summary = `[소아과 문진 요약 - ${state.settings.babyName}${ageText}]
+작성 시각: ${new Date().toLocaleString('ko-KR')}
+최근 체중/신장: ${growthText}
+1. 최근 24시간 수유량: 총 ${totalMl24}ml (${feedCnt24}회)${compareText}
+2. 최근 24시간 배변: 소변 ${peeCnt24}회 / 대변 ${pooCnt24}회
+3. 최근 24시간 체온·투약·증상:
+${healthText}`;
+
+      // iFrame 환경에서도 안전하게 동작하는 execCommand('copy') 사용
+      const tempArea = document.createElement('textarea');
+      tempArea.value = summary;
+      document.body.appendChild(tempArea);
+      tempArea.select();
+      try {
+        document.execCommand('copy');
+        showToast('소아과 문진용 요약이 클립보드에 복사되었습니다!');
+      } catch (e) {
+        showToast('복사에 실패했습니다.');
+      }
+      document.body.removeChild(tempArea);
+    }
+
+    function exportToCSV() {
+      const logs = getActiveLogs();
+      if (logs.length === 0) {
+        showToast('내보낼 기록이 없습니다.');
+        return;
+      }
+
+      const headers = ['날짜', '시각', '구분', '상세내용', '수치(ml/분/체온)', '기록자', '메모'];
+      const rows = logs.map(l => {
+        const d = new Date(l.timestamp);
+        const dateStr = getLocalDateString(d);
+        const timeStr = formatTimeHM(l.timestamp);
+        let cat = l.category;
+        let detail = '';
+        let val = '';
+
+        if (l.category === 'feed') {
+          cat = '수유';
+          const typeNames = { formula: '분유', pumped: '유축', breast: '모유직수', solid: '이유식' };
+          detail = typeNames[l.feedType] || '분유';
+          val = l.feedType === 'breast' ? `${l.leftMin + l.rightMin}분` : `${l.ml}${l.feedType === 'solid' ? 'g' : 'ml'}`;
+        } else if (l.category === 'sleep') {
+          cat = '수면';
+          detail = l.sleepKind === 'night' ? '밤잠' : '낮잠';
+          val = `${Math.round(l.durationMs / 60000)}분`;
+        } else if (l.category === 'diaper') {
+          cat = '기저귀';
+          detail = l.diaperType;
+        } else if (l.category === 'health') {
+          cat = '건강';
+          detail = `${l.tag}(${l.measureSite || '귀'})`;
+          val = `${l.temp}°C`;
+        } else if (l.category === 'growth') {
+          cat = '성장';
+          detail = '키/몸무게/머리둘레';
+          val = `${l.weightKg || '-'}kg / ${l.heightCm || '-'}cm / ${l.headCm || '-'}cm`;
+        }
+
+        return [dateStr, timeStr, cat, detail, val, l.author || '', (l.memo || '').replace(/,/g, ' ')].join(',');
+      });
+
+      const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${state.settings.babyName}_육아기록_${getLocalDateString(new Date())}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('CSV 파일 다운로드가 시작되었습니다.');
+    }
+
+    /**
+     * ============================================================================
+     * 6. 인터랙션 헬퍼 (모달 제어, 탭 전환, 다크모드, 토스트)
+     * ============================================================================
+     */
+    function switchTab(tabName) {
+      ['today', 'stats', 'settings'].forEach(t => {
+        document.getElementById(`tab-${t}`).classList.toggle('hidden', t !== tabName);
+        const navBtn = document.getElementById(`nav-${t}`);
+        if (t === tabName) {
+          navBtn.className = 'flex flex-col items-center justify-center gap-1 text-indigo-500 dark:text-indigo-400 font-bold';
+        } else {
+          navBtn.className = 'flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200';
+        }
+      });
+    }
+
+    function toggleParentRole() {
+      state.role = state.role === '엄마' ? '아빠' : '엄마';
+      localStorage.setItem('baby_parent_role', state.role);
+      updateRoleBadgeUI();
+      showToast(`기록자가 [${state.role}](으)로 전환되었습니다.`);
+    }
+
+    function updateRoleBadgeUI() {
+      const btn = document.getElementById('roleToggleBtn');
+      const label = document.getElementById('roleLabel');
+      label.textContent = state.role;
+      if (state.role === '아빠') {
+        btn.className = 'px-3 py-2 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 bg-sky-500/15 text-sky-600 dark:text-sky-400 border-sky-500/30';
+      } else {
+        btn.className = 'px-3 py-2 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30';
+      }
+    }
+
+    function toggleDarkMode() {
+      const html = document.documentElement;
+      const isDark = html.classList.toggle('dark');
+      document.getElementById('themeIcon').className = isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+    }
+
+    function updateSyncUI(connected, errMsg = '') {
+      const badge = document.getElementById('syncBadge');
+      const detail = document.getElementById('connectionDetailStatus');
+      if (connected) {
+        badge.className = 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-500/15 text-emerald-500';
+        badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> 실시간 동기화';
+        detail.innerHTML = '<b>상태:</b> 정상 연결됨 (부부 실시간 공유 활성)';
+      } else {
+        badge.className = 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-rose-500/15 text-rose-500';
+        badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> 오프라인';
+        detail.innerHTML = `<b>상태:</b> 연결 끊김 ${errMsg ? '(' + errMsg + ')' : ''}`;
+      }
+    }
+
+    function openFeedModal() {
+      const lastFeed = getActiveLogs().find(l => l.category === 'feed');
+      state.modalFeed.ml = (lastFeed && lastFeed.ml > 0) ? lastFeed.ml : (state.settings.defaultMl || 120);
+      state.modalFeed.offsetMin = 0;
+      document.getElementById('feedMlDisplay').textContent = state.modalFeed.ml;
+      document.getElementById('feedTimePreview').textContent = '방금 (현재 시각)';
+      document.getElementById('feedModal').classList.remove('hidden');
+    }
+
+    function selectFeedType(type) {
+      state.modalFeed.type = type;
+      ['formula', 'pumped', 'breast', 'solid'].forEach(t => {
+        const btn = document.getElementById(`ftype-${t}`);
+        btn.className = t === type 
+          ? 'py-3 rounded-2xl font-bold text-xs bg-sky-500 text-white'
+          : 'py-3 rounded-2xl font-bold text-xs bg-slate-100 dark:bg-night-800 text-slate-500';
+      });
+      document.getElementById('feedVolumeSection').classList.toggle('hidden', type === 'breast');
+      document.getElementById('feedBreastSection').classList.toggle('hidden', type !== 'breast');
+      document.getElementById('feedUnitDisplay').textContent = type === 'solid' ? 'g' : 'ml';
+    }
+
+    function adjustFeedMl(delta) {
+      state.modalFeed.ml = Math.max(10, Math.min(500, state.modalFeed.ml + delta));
+      document.getElementById('feedMlDisplay').textContent = state.modalFeed.ml;
+    }
+
+    function setFeedMl(val) {
+      state.modalFeed.ml = val;
+      document.getElementById('feedMlDisplay').textContent = val;
+    }
+
+    function adjustBreastMin(side, delta) {
+      if (side === 'left') {
+        state.modalFeed.leftMin = Math.max(0, Math.min(60, state.modalFeed.leftMin + delta));
+        document.getElementById('breastLeftDisplay').textContent = `${state.modalFeed.leftMin}분`;
+      } else {
+        state.modalFeed.rightMin = Math.max(0, Math.min(60, state.modalFeed.rightMin + delta));
+        document.getElementById('breastRightDisplay').textContent = `${state.modalFeed.rightMin}분`;
+      }
+    }
+
+    function setTimeOffset(domain, offsetMin) {
+      if (domain === 'feed') {
+        state.modalFeed.offsetMin = offsetMin;
+        const targetTime = new Date(Date.now() + offsetMin * 60000);
+        document.getElementById('feedTimePreview').textContent = offsetMin === 0 
+          ? '방금 (현재 시각)' 
+          : `${Math.abs(offsetMin)}분 전 (${formatTimeHM(targetTime.getTime())})`;
+      }
+    }
+
+    function openSleepManualModal() {
+      const now = new Date();
+      const oneHourAgo = new Date(now.getTime() - 3600000);
+      document.getElementById('manualSleepStart').value = formatTimeHM(oneHourAgo.getTime());
+      document.getElementById('manualSleepEnd').value = formatTimeHM(now.getTime());
+      document.getElementById('sleepManualModal').classList.remove('hidden');
+    }
+
+    function selectSleepKind(kind) {
+      state.modalSleep.kind = kind;
+      document.getElementById('skind-nap').className = kind === 'nap'
+        ? 'py-3 rounded-2xl font-bold text-sm bg-indigo-500 text-white'
+        : 'py-3 rounded-2xl font-bold text-sm bg-slate-100 dark:bg-night-800 text-slate-500';
+      document.getElementById('skind-night').className = kind === 'night'
+        ? 'py-3 rounded-2xl font-bold text-sm bg-indigo-500 text-white'
+        : 'py-3 rounded-2xl font-bold text-sm bg-slate-100 dark:bg-night-800 text-slate-500';
+    }
+
+    function openHealthModal() {
+      state.modalHealth.temp = 36.8;
+      document.getElementById('tempDisplay').textContent = '36.8';
+      document.getElementById('healthModal').classList.remove('hidden');
+    }
+
+    function adjustTemp(delta) {
+      state.modalHealth.temp = Math.max(34.0, Math.min(42.0, +(state.modalHealth.temp + delta).toFixed(1)));
+      document.getElementById('tempDisplay').textContent = state.modalHealth.temp.toFixed(1);
+    }
+
+    function toggleHealthTag(btn, tag) {
+      state.modalHealth.tag = tag;
+      Array.from(document.getElementById('healthTagContainer').children).forEach(el => {
+        el.className = 'px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400';
+      });
+      btn.className = 'px-3 py-2 rounded-xl text-xs font-bold bg-rose-500 text-white';
+    }
+
+    function selectMeasureSite(btn, site) {
+      state.modalHealth.site = site;
+      Array.from(document.getElementById('measureSiteContainer').children).forEach(el => {
+        el.className = 'py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400';
+      });
+      btn.className = 'py-2 rounded-xl text-xs font-bold bg-rose-500 text-white';
+    }
+
+    function openGrowthModal() {
+      const latestW = getActiveLogs().find(l => l.category === 'growth' && l.weightKg != null);
+      const latestH = getActiveLogs().find(l => l.category === 'growth' && l.heightCm != null);
+      if (latestW) document.getElementById('growthWeightInput').placeholder = `직전: ${latestW.weightKg}kg`;
+      if (latestH) document.getElementById('growthHeightInput').placeholder = `직전: ${latestH.heightCm}cm`;
+      document.getElementById('growthModal').classList.remove('hidden');
+    }
+
+    function updateLocalPrefs() {
+      state.prefs.leftHanded = document.getElementById('prefLeftHanded').checked;
+      state.prefs.showDiaper = document.getElementById('prefShowDiaper').checked;
+      localStorage.setItem('baby_pref_lefthanded', state.prefs.leftHanded);
+      localStorage.setItem('baby_pref_showdiaper', state.prefs.showDiaper);
+      applyLocalPrefsUI();
+      showToast('화면 맞춤 설정이 적용되었습니다.');
+    }
+
+    function applyLocalPrefsUI() {
+      document.getElementById('prefLeftHanded').checked = state.prefs.leftHanded;
+      document.getElementById('prefShowDiaper').checked = state.prefs.showDiaper;
+      // 왼손잡이 모드: 수유/수면 버튼 좌우 순서 반전
+      document.getElementById('actionCardFeed').classList.toggle('order-2', state.prefs.leftHanded);
+      document.getElementById('actionCardSleep').classList.toggle('order-1', state.prefs.leftHanded);
+      // 홈 화면 기저귀 버튼 표시/숨김
+      document.getElementById('diaperQuickGroup').classList.toggle('hidden', !state.prefs.showDiaper);
+    }
+
+    function printDailyReport() {
+      switchTab('stats');
+      setTimeout(() => window.print(), 200);
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+    }
+
+    function changeStatsDate(deltaDays) {
+      const d = new Date(`${state.statsDate}T00:00:00`);
+      d.setDate(d.getDate() + deltaDays);
+      state.statsDate = getLocalDateString(d);
+      renderStatsTab(getActiveLogs());
+    }
+
+    function syncSettingsInputs() {
+      document.getElementById('settingBabyName').value = state.settings.babyName || '';
+      document.getElementById('settingBabyBirth').value = state.settings.babyBirth || '';
+      document.getElementById('settingFeedInterval').value = state.settings.feedIntervalHours || 3;
+      document.getElementById('settingDefaultMl').value = state.settings.defaultMl || 120;
+    }
+
+    // 실행 취소(Undo) 지원 토스트 알림
+    function showToast(message, logId = null, isRestoreAction = false) {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = 'pointer-events-auto bg-slate-900 dark:bg-slate-800 text-white px-4 py-3 rounded-2xl shadow-xl border border-slate-700 flex items-center justify-between text-xs font-medium';
+      
+      let actionBtnHtml = '';
+      if (logId && !isRestoreAction) {
+        actionBtnHtml = `<button onclick="softDeleteLog('${logId}'); this.parentElement.remove();" class="ml-3 text-rose-400 font-bold underline">실행 취소</button>`;
+      } else if (logId && isRestoreAction) {
+        actionBtnHtml = `<button onclick="restoreLog('${logId}'); this.parentElement.remove();" class="ml-3 text-indigo-400 font-bold underline">되돌리기</button>`;
+      }
+
+      toast.innerHTML = `<span>${message}</span>${actionBtnHtml}`;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        if (toast.parentElement) toast.remove();
+      }, 3500);
+    }
+
+    // iOS Safari 홈 화면 추가 안내 체크
+    function checkIosInstallPrompt() {
+      const isIos = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+      const isStandalone = window.navigator.standalone === true;
+      const dismissed = localStorage.getItem('ios_banner_dismissed');
+      if (isIos && !isStandalone && !dismissed) {
+        document.getElementById('iosInstallBanner').classList.remove('hidden');
+      }
+    }
+
+    function dismissIosBanner() {
+      localStorage.setItem('ios_banner_dismissed', 'true');
+      document.getElementById('iosInstallBanner').classList.add('hidden');
+    }
+
+    // 초기 실행 및 30초마다 경과 시간 자동 갱신
+    window.addEventListener('DOMContentLoaded', () => {
+      updateRoleBadgeUI();
+      applyLocalPrefsUI();
+      checkIosInstallPrompt();
+      initFirebase();
+      setInterval(() => {
+        renderAll();
+      }, 30000);
+    });
+  </script>
+</body>
+</html>
