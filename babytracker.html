@@ -106,7 +106,7 @@
     </div>
   </header>
 
-  <!-- 발열 집중 관찰 배너 (오늘 37.5도 이상 기록이 있을 때만 자동 노출) -->
+  <!-- 발열 집중 관찰 배너 (최근 24시간 37.5도 이상 기록이 있을 때만 자동 노출) -->
   <div id="feverAlertBanner" class="hidden bg-rose-600 text-white px-4 py-2.5 text-xs">
     <div class="max-w-lg mx-auto flex items-center justify-between gap-2">
       <div class="flex items-center gap-2">
@@ -506,7 +506,7 @@
 
   <!-- ==================== MODAL 1: 수유 입력 (한 손 엄지 조작 최적화) ==================== -->
   <div id="feedModal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-xs flex items-end sm:items-center justify-center">
-    <div class="bg-white dark:bg-night-900 w-full max-w-lg rounded-t-3xl sm:rounded-3xl p-5 space-y-4 border-t sm:border border-slate-200 dark:border-slate-800 animate-slide-up">
+    <div class="bg-white dark:bg-night-900 w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl p-5 space-y-4 border-t sm:border border-slate-200 dark:border-slate-800">
       <div class="flex items-center justify-between">
         <h3 class="font-bold text-lg flex items-center gap-2">
           <i class="fa-solid fa-bottle-droplet text-sky-400"></i> 수유 기록하기
@@ -564,18 +564,19 @@
         </div>
       </div>
 
-      <!-- 빠른 시간 보정 (사후 입력 대응) -->
-      <div class="space-y-1.5">
+      <!-- 빠른 시간 보정 + 원하는 시각 자유 입력 -->
+      <div class="space-y-2">
         <div class="flex items-center justify-between text-xs text-slate-400">
-          <span>수유 시각 보정</span>
+          <span>수유 시각 (빠른 선택 또는 직접 입력)</span>
           <span id="feedTimePreview" class="text-sky-400 font-bold">방금 (현재 시각)</span>
         </div>
-        <div class="grid grid-cols-4 gap-1.5">
-          <button type="button" onclick="setTimeOffset('feed', 0)" class="py-2 rounded-xl bg-sky-500/20 text-sky-400 text-xs font-bold">지금</button>
-          <button type="button" onclick="setTimeOffset('feed', -10)" class="py-2 rounded-xl bg-slate-100 dark:bg-night-800 text-xs font-medium">10분 전</button>
-          <button type="button" onclick="setTimeOffset('feed', -20)" class="py-2 rounded-xl bg-slate-100 dark:bg-night-800 text-xs font-medium">20분 전</button>
-          <button type="button" onclick="setTimeOffset('feed', -30)" class="py-2 rounded-xl bg-slate-100 dark:bg-night-800 text-xs font-medium">30분 전</button>
+        <div class="grid grid-cols-4 gap-1.5" id="feedOffsetBtnGroup">
+          <button type="button" data-offset="0" onclick="setTimeOffset('feed', 0)" class="py-2 rounded-xl bg-sky-500/20 text-sky-400 text-xs font-bold">지금</button>
+          <button type="button" data-offset="-10" onclick="setTimeOffset('feed', -10)" class="py-2 rounded-xl bg-slate-100 dark:bg-night-800 text-xs font-medium">10분 전</button>
+          <button type="button" data-offset="-20" onclick="setTimeOffset('feed', -20)" class="py-2 rounded-xl bg-slate-100 dark:bg-night-800 text-xs font-medium">20분 전</button>
+          <button type="button" data-offset="-30" onclick="setTimeOffset('feed', -30)" class="py-2 rounded-xl bg-slate-100 dark:bg-night-800 text-xs font-medium">30분 전</button>
         </div>
+        <input id="feedDateTimeInput" type="datetime-local" onchange="onFeedDateTimeChange()" class="w-full px-3.5 py-3 rounded-2xl bg-slate-100 dark:bg-night-800 text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500">
       </div>
 
       <!-- 선택 메모 (역류/트림 등) -->
@@ -623,25 +624,25 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL 3: 체온 · 투약 · 증상 기록 ==================== -->
+  <!-- ==================== MODAL 3: 아플 때 기록 (체온 · 투약 · 증상) ==================== -->
   <div id="healthModal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-xs flex items-end sm:items-center justify-center">
-    <div class="bg-white dark:bg-night-900 w-full max-w-lg rounded-t-3xl sm:rounded-3xl p-5 space-y-4 border-t sm:border border-slate-200 dark:border-slate-800">
+    <div class="bg-white dark:bg-night-900 w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl p-5 space-y-4 border-t sm:border border-slate-200 dark:border-slate-800">
       <div class="flex items-center justify-between">
         <h3 class="font-bold text-lg flex items-center gap-2">
-          <i class="fa-solid fa-thermometer text-rose-400"></i> 체온 · 투약 기록
+          <i class="fa-solid fa-thermometer text-rose-400"></i> 아플 때 기록 (체온 · 투약 · 증상)
         </h3>
         <button onclick="closeModal('healthModal')" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-night-800 flex items-center justify-center text-slate-400">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
 
-      <!-- 체온 조절 스텝퍼 -->
+      <!-- 체온 조절 스텝퍼 + 숫자 직접 입력 -->
       <div class="space-y-1.5">
-        <label class="text-xs text-slate-400 font-medium">체온 측정 (°C) - 37.5°C 이상 시 상단 발열 배너 자동 표시</label>
+        <label for="tempInput" class="text-xs text-slate-400 font-medium">체온 측정 (°C) - 숫자를 눌러 직접 입력하거나 ±0.1로 조절하세요</label>
         <div class="flex items-center justify-between bg-slate-100 dark:bg-night-800 rounded-2xl p-3">
           <button type="button" onclick="adjustTemp(-0.1)" class="btn-thumb w-14 h-14 rounded-xl bg-white dark:bg-night-900 font-bold text-lg">-0.1</button>
-          <div class="text-center">
-            <span id="tempDisplay" class="text-3xl font-extrabold text-rose-500">36.8</span>
+          <div class="flex items-baseline justify-center gap-1">
+            <input id="tempInput" type="number" step="0.1" min="34.0" max="43.0" inputmode="decimal" value="36.8" oninput="onTempInput(this.value)" onblur="normalizeTempInput()" aria-label="체온 직접 입력" class="w-24 text-center text-3xl font-extrabold text-rose-500 bg-transparent border-b-2 border-rose-500/40 focus:border-rose-500 focus:outline-none">
             <span class="text-base font-bold text-slate-400">°C</span>
           </div>
           <button type="button" onclick="adjustTemp(0.1)" class="btn-thumb w-14 h-14 rounded-xl bg-white dark:bg-night-900 font-bold text-lg">+0.1</button>
@@ -658,19 +659,35 @@
         </div>
       </div>
 
-      <!-- 빠른 증상/투약 칩 -->
+      <!-- 아플 때 복용약 선택 (질병/해열 관련 항목만 구성) -->
       <div class="space-y-1.5">
-        <label class="text-xs text-slate-400 font-medium">투약 / 증상 빠른 선택 (선택사항)</label>
-        <div class="flex flex-wrap gap-1.5" id="healthTagContainer">
-          <button type="button" onclick="toggleHealthTag(this, '체온만 측정')" class="px-3 py-2 rounded-xl text-xs font-bold bg-rose-500 text-white">체온만 측정</button>
-          <button type="button" onclick="toggleHealthTag(this, '해열제 복용')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400">해열제 복용</button>
-          <button type="button" onclick="toggleHealthTag(this, '비타민D/유산균')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400">비타민D/유산균</button>
-          <button type="button" onclick="toggleHealthTag(this, '기침/콧물')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400">기침/콧물</button>
-          <button type="button" onclick="toggleHealthTag(this, '구토/설사')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400">구토/설사</button>
+        <label class="text-xs text-slate-400 font-medium">복용 약 선택 (아플 때 투약)</label>
+        <div class="flex flex-wrap gap-1.5" id="healthMedContainer">
+          <button type="button" onclick="selectHealthMed(this, '투약 없음')" class="px-3 py-2 rounded-xl text-xs font-bold bg-rose-500 text-white">투약 없음</button>
+          <button type="button" onclick="selectHealthMed(this, '해열제 (아세트아미노펜)')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400">해열제 (아세트아미노펜)</button>
+          <button type="button" onclick="selectHealthMed(this, '해열제 (이부프로펜)')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400">해열제 (이부프로펜)</button>
+          <button type="button" onclick="selectHealthMed(this, '해열제 (덱시부프로펜)')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400">해열제 (덱시부프로펜)</button>
+          <button type="button" onclick="selectHealthMed(this, '처방약/감기약')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400">처방약/감기약</button>
+          <button type="button" onclick="selectHealthMed(this, '항생제')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400">항생제</button>
+          <button type="button" onclick="selectHealthMed(this, '기타 약')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400">기타 약</button>
+        </div>
+        <input id="healthMedDetailInput" type="text" placeholder="약 이름 · 용량 직접 입력 (예: 챔프 빨강 3ml)" class="w-full px-3.5 py-2.5 rounded-2xl bg-slate-100 dark:bg-night-800 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500">
+      </div>
+
+      <!-- 동반 증상 복수 선택 -->
+      <div class="space-y-1.5">
+        <label class="text-xs text-slate-400 font-medium">동반 증상 (복수 선택 가능)</label>
+        <div class="flex flex-wrap gap-1.5" id="healthSymptomContainer">
+          <button type="button" onclick="toggleSymptomTag(this, '기침')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400">기침</button>
+          <button type="button" onclick="toggleSymptomTag(this, '콧물')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400">콧물</button>
+          <button type="button" onclick="toggleSymptomTag(this, '구토')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400">구토</button>
+          <button type="button" onclick="toggleSymptomTag(this, '설사')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400">설사</button>
+          <button type="button" onclick="toggleSymptomTag(this, '발진')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400">발진</button>
+          <button type="button" onclick="toggleSymptomTag(this, '처짐')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400">처짐</button>
         </div>
       </div>
 
-      <input id="healthMemoInput" type="text" placeholder="약 용량이나 상세 증상 메모 (선택)" class="w-full px-3.5 py-3 rounded-2xl bg-slate-100 dark:bg-night-800 text-sm focus:outline-none">
+      <input id="healthMemoInput" type="text" placeholder="상세 증상이나 특이사항 메모 (선택)" class="w-full px-3.5 py-3 rounded-2xl bg-slate-100 dark:bg-night-800 text-sm focus:outline-none">
 
       <button type="button" onclick="submitHealthLog()" class="btn-thumb w-full rounded-2xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-base">
         건강 기록 저장
@@ -734,10 +751,26 @@
     let activeSleepRef = null;
     let settingsRef = null;
 
+    // 로컬 날짜 문자열 생성 (YYYY-MM-DD)
+    function getLocalDateString(dateObj) {
+      const y = dateObj.getFullYear();
+      const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const d = String(dateObj.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    // <input type="datetime-local"> 용 로컬 날짜·시각 문자열 생성 (YYYY-MM-DDTHH:mm)
+    function toDateTimeLocalString(dateObj) {
+      const dStr = getLocalDateString(dateObj);
+      const hh = String(dateObj.getHours()).padStart(2, '0');
+      const mm = String(dateObj.getMinutes()).padStart(2, '0');
+      return `${dStr}T${hh}:${mm}`;
+    }
+
     // 앱 전역 상태
     const state = {
       role: localStorage.getItem('baby_parent_role') || '엄마', // '엄마' | '아빠'
-      logs: {},          // { id: { type, timestamp, ... } }
+      logs: {},          // { id: { category, timestamp, ... } }
       activeSleep: null, // { startTime, kind, author } | null
       settings: {
         babyName: '우리 아기',
@@ -760,7 +793,8 @@
       modalHealth: {
         temp: 36.8,
         site: '귀(고막)',
-        tag: '체온만 측정'
+        med: '투약 없음',
+        symptoms: []
       },
       prefs: {
         leftHanded: localStorage.getItem('baby_pref_lefthanded') === 'true',
@@ -771,7 +805,9 @@
     // Firebase 초기화 실행
     function initFirebase() {
       try {
-        firebase.initializeApp(FIREBASE_CONFIG);
+        if (!firebase.apps.length) {
+          firebase.initializeApp(FIREBASE_CONFIG);
+        }
         db = firebase.database();
 
         const rootPath = 'babyTracker/v1';
@@ -808,7 +844,6 @@
             renderAll();
           }
         });
-
       } catch (err) {
         console.error('Firebase init failed:', err);
         updateSyncUI(false, err.message);
@@ -817,16 +852,9 @@
 
     /**
      * ============================================================================
-     * 2. 유틸리티 함수 (날짜, 경과 시간, 자정 넘김 계산)
+     * 2. 유틸리티 함수 (시각 포맷, 경과 시간, 자정 넘김 계산)
      * ============================================================================
      */
-    function getLocalDateString(dateObj) {
-      const y = dateObj.getFullYear();
-      const m = String(dateObj.getMonth() + 1).padStart(2, '0');
-      const d = String(dateObj.getDate()).padStart(2, '0');
-      return `${y}-${m}-${d}`;
-    }
-
     function formatTimeHM(timestamp) {
       const d = new Date(timestamp);
       return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
@@ -849,7 +877,7 @@
       return `${h}h ${m}m`;
     }
 
-    // 자정을 넘긴 수면의 특정 날짜(dateStr)에 해당하는 수면 시간(ms) 계산
+    // 자정을 넘긴 수면의 특정 날짜(targetDateStr)에 해당하는 수면 시간(ms) 계산
     function getSleepOverlapMsForDate(startTime, endTime, targetDateStr) {
       const dayStart = new Date(`${targetDateStr}T00:00:00`).getTime();
       const dayEnd = dayStart + 24 * 60 * 60 * 1000;
@@ -879,10 +907,17 @@
      * 3. 기록 생성 / 수정 / 소프트 삭제 / 복구 액션
      * ============================================================================
      */
-    // 수유 기록 저장
+    // 수유 기록 저장 (직접 입력 시각 우선 반영)
     function submitFeedLog() {
-      const now = Date.now() + (state.modalFeed.offsetMin * 60000);
+      if (!logsRef) {
+        showToast('서버 연결을 확인 중입니다. 잠시 후 다시 시도해주세요.');
+        return;
+      }
+      const dtVal = document.getElementById('feedDateTimeInput').value;
+      const parsedTime = dtVal ? new Date(dtVal).getTime() : NaN;
+      const targetTimestamp = !isNaN(parsedTime) ? parsedTime : (Date.now() + (state.modalFeed.offsetMin * 60000));
       const memo = document.getElementById('feedMemoInput').value.trim();
+
       const newLog = {
         category: 'feed',
         feedType: state.modalFeed.type, // 'formula' | 'pumped' | 'breast' | 'solid'
@@ -890,7 +925,7 @@
         leftMin: state.modalFeed.type === 'breast' ? state.modalFeed.leftMin : 0,
         rightMin: state.modalFeed.type === 'breast' ? state.modalFeed.rightMin : 0,
         memo: memo,
-        timestamp: now,
+        timestamp: targetTimestamp,
         author: state.role,
         updatedAt: Date.now()
       };
@@ -900,15 +935,19 @@
         document.getElementById('feedMemoInput').value = '';
         closeModal('feedModal');
         const typeNames = { formula: '분유', pumped: '유축', solid: '이유식' };
-        const desc = newLog.feedType === 'breast' 
-          ? `직수(좌${newLog.leftMin}분/우${newLog.rightMin}분)` 
+        const desc = newLog.feedType === 'breast'
+          ? `직수(좌${newLog.leftMin}분/우${newLog.rightMin}분)`
           : `${typeNames[newLog.feedType] || '분유'} ${newLog.ml}${newLog.feedType === 'solid' ? 'g' : 'ml'}`;
-        showToast(`${desc} 기록 완료`, ref.key);
+        showToast(`${desc} (${formatTimeHM(targetTimestamp)}) 기록 완료`, ref.key);
+      }).catch(err => {
+        console.error(err);
+        showToast('저장에 실패했습니다.');
       });
     }
 
     // 직전 수유와 동일하게 1탭 즉시 저장
     function instantRepeatLastFeed() {
+      if (!logsRef) return;
       const lastFeed = getActiveLogs().find(l => l.category === 'feed');
       const feedType = lastFeed ? lastFeed.feedType : 'formula';
       const ml = (lastFeed && lastFeed.ml > 0) ? lastFeed.ml : (state.settings.defaultMl || 120);
@@ -935,8 +974,8 @@
 
     // 수면 타이머 시작/종료 토글
     function toggleSleepTimer() {
+      if (!activeSleepRef || !logsRef) return;
       if (!state.activeSleep) {
-        // 수면 시작
         const hour = new Date().getHours();
         const autoKind = (hour >= 19 || hour < 6) ? 'night' : 'nap';
         activeSleepRef.set({
@@ -947,17 +986,16 @@
           showToast(`${autoKind === 'night' ? '밤잠' : '낮잠'} 타이머를 시작했습니다.`);
         });
       } else {
-        // 수면 종료 및 로그 저장
         const startTime = state.activeSleep.startTime;
         const endTime = Date.now();
-        const durationMs = Math.max(60000, endTime - startTime); // 최소 1분 처리
+        const durationMs = Math.max(60000, endTime - startTime);
         const ref = logsRef.push();
         const sleepLog = {
           category: 'sleep',
           sleepKind: state.activeSleep.kind || 'nap',
           startTime: startTime,
           endTime: endTime,
-          timestamp: endTime, // 타임라인 정렬 기준
+          timestamp: endTime,
           durationMs: durationMs,
           author: state.role,
           updatedAt: Date.now()
@@ -974,6 +1012,7 @@
 
     // 지난 수면 수동 입력 저장 (자정 넘김 자동 처리)
     function submitManualSleep() {
+      if (!logsRef) return;
       const startVal = document.getElementById('manualSleepStart').value;
       const endVal = document.getElementById('manualSleepEnd').value;
       if (!startVal || !endVal) {
@@ -985,7 +1024,6 @@
       let startDate = new Date(`${todayStr}T${startVal}:00`);
       let endDate = new Date(`${todayStr}T${endVal}:00`);
 
-      // 잠든 시각이 일어난 시각보다 늦으면 전날 밤에 잠든 것으로 간주 (예: 23:00 ~ 06:30)
       if (startDate.getTime() >= endDate.getTime()) {
         startDate.setDate(startDate.getDate() - 1);
       }
@@ -1009,6 +1047,7 @@
 
     // 기저귀 1탭 즉시 저장
     function quickLogDiaper(diaperType) {
+      if (!logsRef) return;
       const labelMap = { pee: '소변', poo: '대변', both: '소변+대변' };
       const ref = logsRef.push();
       ref.set({
@@ -1022,28 +1061,37 @@
       });
     }
 
-    // 체온 · 투약 저장
+    // 체온 · 투약 · 증상 저장
     function submitHealthLog() {
+      if (!logsRef) return;
+      normalizeTempInput();
+      const medDetail = document.getElementById('healthMedDetailInput').value.trim();
       const memo = document.getElementById('healthMemoInput').value.trim();
       const ref = logsRef.push();
       ref.set({
         category: 'health',
         temp: Number(state.modalHealth.temp.toFixed(1)),
         measureSite: state.modalHealth.site,
-        tag: state.modalHealth.tag,
+        med: state.modalHealth.med,
+        medDetail: medDetail,
+        symptoms: [...state.modalHealth.symptoms],
+        tag: state.modalHealth.med, // 기존 기록 호환용
         memo: memo,
         timestamp: Date.now(),
         author: state.role,
         updatedAt: Date.now()
       }).then(() => {
+        document.getElementById('healthMedDetailInput').value = '';
         document.getElementById('healthMemoInput').value = '';
         closeModal('healthModal');
-        showToast(`체온 ${state.modalHealth.temp.toFixed(1)}°C (${state.modalHealth.site}) 저장됨`, ref.key);
+        const medStr = state.modalHealth.med !== '투약 없음' ? ` · ${state.modalHealth.med}` : '';
+        showToast(`체온 ${state.modalHealth.temp.toFixed(1)}°C (${state.modalHealth.site})${medStr} 저장됨`, ref.key);
       });
     }
 
     // 키 · 몸무게 · 머리둘레 성장 기록 저장
     function submitGrowthLog() {
+      if (!logsRef) return;
       const weightVal = parseFloat(document.getElementById('growthWeightInput').value);
       const heightVal = parseFloat(document.getElementById('growthHeightInput').value);
       const headVal = parseFloat(document.getElementById('growthHeadInput').value);
@@ -1080,6 +1128,7 @@
 
     // 소프트 삭제 (실수 삭제 복구 지원)
     function softDeleteLog(logId) {
+      if (!logsRef) return;
       logsRef.child(logId).update({
         deletedAt: Date.now(),
         deletedBy: state.role
@@ -1090,6 +1139,7 @@
 
     // 삭제된 기록 복구
     function restoreLog(logId) {
+      if (!logsRef) return;
       logsRef.child(logId).update({
         deletedAt: null,
         deletedBy: null,
@@ -1101,6 +1151,7 @@
 
     // 아기 기본 설정 저장
     function saveBabySettings() {
+      if (!settingsRef) return;
       const babyName = document.getElementById('settingBabyName').value.trim() || '우리 아기';
       const babyBirth = document.getElementById('settingBabyBirth').value;
       const feedIntervalHours = parseFloat(document.getElementById('settingFeedInterval').value) || 3;
@@ -1119,7 +1170,7 @@
 
     /**
      * ============================================================================
-     * 4. UI 렌더링 엔진 (대시보드, 타임라인, 7일 차트, 문진 요약)
+     * 4. UI 렌더링 엔진 (대시보드, 타임라인, 7일 차트, 성장, 삭제함)
      * ============================================================================
      */
     function renderAll() {
@@ -1154,8 +1205,8 @@
         document.getElementById('lastFeedElapsed').textContent = `${formatDuration(elapsed)} 전`;
         document.getElementById('lastFeedAuthor').textContent = lastFeed.author || '-';
         const typeNames = { formula: '분유', pumped: '유축', solid: '이유식' };
-        const typeStr = lastFeed.feedType === 'breast' 
-          ? `직수 ${lastFeed.leftMin + lastFeed.rightMin}분` 
+        const typeStr = lastFeed.feedType === 'breast'
+          ? `직수 ${lastFeed.leftMin + lastFeed.rightMin}분`
           : `${typeNames[lastFeed.feedType] || '분유'} ${lastFeed.ml}${lastFeed.feedType === 'solid' ? 'g' : 'ml'}`;
         document.getElementById('lastFeedDetail').textContent = `${formatTimeHM(lastFeed.timestamp)} · ${typeStr}`;
 
@@ -1185,7 +1236,6 @@
       const sleepAuthorBadge = document.getElementById('sleepAuthorBadge');
 
       if (state.activeSleep) {
-        // 현재 자는 중
         const sleepingMs = now - state.activeSleep.startTime;
         sleepStatusTitle.innerHTML = `<i class="fa-solid fa-bed text-emerald-400 animate-pulse"></i> ${state.activeSleep.kind === 'night' ? '밤잠 자는 중' : '낮잠 자는 중'}`;
         sleepTimerDisplay.textContent = formatDuration(sleepingMs);
@@ -1197,7 +1247,6 @@
         mainSleepBtnText.textContent = '일어남 (수면 종료)';
         mainSleepSubBadge.textContent = '진행중';
       } else {
-        // 깨어 있는 중
         const lastSleep = allLogs.find(l => l.category === 'sleep');
         sleepStatusTitle.innerHTML = `<i class="fa-solid fa-sun text-amber-400"></i> 깨어있는 중`;
         sleepTimerDisplay.className = 'text-xl font-bold tracking-tight text-indigo-500 dark:text-indigo-400 my-0.5';
@@ -1224,7 +1273,6 @@
       let todayPeeCnt = 0;
       let todayPooCnt = 0;
       let lastDiaperLog = null;
-      let feverLogToday = null;
 
       todayLogs.forEach(l => {
         if (l.category === 'feed') {
@@ -1234,8 +1282,6 @@
           if (l.diaperType === 'pee' || l.diaperType === 'both') todayPeeCnt++;
           if (l.diaperType === 'poo' || l.diaperType === 'both') todayPooCnt++;
           if (!lastDiaperLog) lastDiaperLog = l;
-        } else if (l.category === 'health' && l.temp >= 37.5) {
-          if (!feverLogToday || l.temp > feverLogToday.temp) feverLogToday = l;
         }
       });
 
@@ -1264,11 +1310,16 @@
       document.getElementById('statPooCount').textContent = `${todayPooCnt}회`;
       document.getElementById('statLastDiaper').textContent = lastDiaperLog ? formatTimeHM(lastDiaperLog.timestamp) : '-';
 
-      // 발열 배너 표시 여부
+      // 발열 배너 표시 여부 (최근 24시간 내 37.5°C 이상 기록 기준)
       const feverBanner = document.getElementById('feverAlertBanner');
-      if (feverLogToday) {
+      const last24hHealth = allLogs.filter(l => l.category === 'health' && (now - l.timestamp) <= 24 * 3600000);
+      const feverLogs24h = last24hHealth.filter(l => l.temp >= 37.5);
+      if (feverLogs24h.length > 0) {
+        const maxFever = feverLogs24h.reduce((max, cur) => cur.temp > max.temp ? cur : max, feverLogs24h[0]);
+        const lastFeverMed = last24hHealth.find(l => (l.med || l.tag || '').includes('해열제'));
+        const medElapsedText = lastFeverMed ? ` · 마지막 해열제 ${formatDuration(now - lastFeverMed.timestamp)} 전` : '';
         feverBanner.classList.remove('hidden');
-        document.getElementById('feverAlertText').textContent = `오늘 최고 체온 ${feverLogToday.temp}°C (${formatTimeHM(feverLogToday.timestamp)}) 기록됨`;
+        document.getElementById('feverAlertText').textContent = `24시간 최고 ${maxFever.temp}°C (${formatTimeHM(maxFever.timestamp)})${medElapsedText}`;
       } else {
         feverBanner.classList.add('hidden');
       }
@@ -1319,14 +1370,20 @@
         } else if (log.category === 'health') {
           const isFever = log.temp >= 37.5;
           iconHtml = `<div class="w-10 h-10 rounded-2xl ${isFever ? 'bg-rose-500 text-white' : 'bg-rose-500/15 text-rose-400'} flex items-center justify-center"><i class="fa-solid fa-thermometer"></i></div>`;
-          title = `체온 ${log.temp}°C (${log.measureSite || '귀'}) · ${log.tag}`;
-          sub = log.memo || (isFever ? '발열 주의 관찰' : '정상 범위');
+          const medLabel = log.med || log.tag || '투약 없음';
+          const medPart = medLabel !== '투약 없음' ? ` · ${medLabel}` : '';
+          title = `체온 ${log.temp}°C (${log.measureSite || '귀'})${medPart}`;
+          const subParts = [];
+          if (log.medDetail) subParts.push(log.medDetail);
+          if (Array.isArray(log.symptoms) && log.symptoms.length > 0) subParts.push(`증상: ${log.symptoms.join(', ')}`);
+          if (log.memo) subParts.push(log.memo);
+          sub = subParts.length > 0 ? subParts.join(' · ') : (isFever ? '발열 주의 관찰' : '정상 범위');
         } else if (log.category === 'growth') {
           iconHtml = `<div class="w-10 h-10 rounded-2xl bg-violet-500/15 text-violet-400 flex items-center justify-center"><i class="fa-solid fa-ruler-vertical"></i></div>`;
           const parts = [];
-          if (log.weightKg) parts.push(`${log.weightKg}kg`);
-          if (log.heightCm) parts.push(`${log.heightCm}cm`);
-          if (log.headCm) parts.push(`머리 ${log.headCm}cm`);
+          if (log.weightKg != null) parts.push(`${log.weightKg}kg`);
+          if (log.heightCm != null) parts.push(`${log.heightCm}cm`);
+          if (log.headCm != null) parts.push(`머리 ${log.headCm}cm`);
           title = `성장 기록 · ${parts.join(' / ')}`;
           sub = log.memo || '키·몸무게 측정';
         }
@@ -1393,7 +1450,7 @@
       });
 
       timeBar.innerHTML = barHtml;
-      document.getElementById('selectedDaySummaryText').innerHTML = 
+      document.getElementById('selectedDaySummaryText').innerHTML =
         `<b>${targetStr}</b> 요약: 총 수유 <b>${dayFeedMl}ml</b> (${dayFeedCount}회) · 총 수면 <b>${formatDuration(daySleepTotal)}</b>`;
 
       // 2) 최근 7일 주간 차트 렌더링
@@ -1431,7 +1488,6 @@
       let intervalCount = 0;
       for (let i = 1; i < weekFeeds.length; i++) {
         const diff = weekFeeds[i].timestamp - weekFeeds[i - 1].timestamp;
-        // 30분 이상 ~ 12시간 이하 간격만 정상 수유 텀으로 합산
         if (diff >= 30 * 60000 && diff <= 12 * 3600000) {
           intervalSum += diff;
           intervalCount++;
@@ -1574,7 +1630,13 @@
       if (healthLogs.length > 0) {
         const maxTempLog = healthLogs.reduce((max, cur) => cur.temp > max.temp ? cur : max, healthLogs[0]);
         healthText = `최고 체온: ${maxTempLog.temp}°C (${maxTempLog.measureSite || '귀'}, ${formatTimeHM(maxTempLog.timestamp)})\n` +
-          healthLogs.map(h => `- ${formatTimeHM(h.timestamp)}: ${h.temp}°C [${h.measureSite || '귀'}] (${h.tag}${h.memo ? ', ' + h.memo : ''})`).join('\n');
+          healthLogs.map(h => {
+            const medLabel = h.med || h.tag || '투약 없음';
+            const medInfo = medLabel !== '투약 없음' ? `${medLabel}${h.medDetail ? ' - ' + h.medDetail : ''}` : '투약 없음';
+            const symInfo = (Array.isArray(h.symptoms) && h.symptoms.length > 0) ? ` / 증상: ${h.symptoms.join(', ')}` : '';
+            const memoInfo = h.memo ? ` / 메모: ${h.memo}` : '';
+            return `- ${formatTimeHM(h.timestamp)}: ${h.temp}°C [${h.measureSite || '귀'}] (${medInfo}${symInfo}${memoInfo})`;
+          }).join('\n');
       }
 
       const summary = `[소아과 문진 요약 - ${state.settings.babyName}${ageText}]
@@ -1585,7 +1647,6 @@
 3. 최근 24시간 체온·투약·증상:
 ${healthText}`;
 
-      // iFrame 환경에서도 안전하게 동작하는 execCommand('copy') 사용
       const tempArea = document.createElement('textarea');
       tempArea.value = summary;
       document.body.appendChild(tempArea);
@@ -1629,12 +1690,14 @@ ${healthText}`;
           detail = l.diaperType;
         } else if (l.category === 'health') {
           cat = '건강';
-          detail = `${l.tag}(${l.measureSite || '귀'})`;
+          const medLabel = l.med || l.tag || '투약 없음';
+          const symLabel = (Array.isArray(l.symptoms) && l.symptoms.length > 0) ? ` [${l.symptoms.join('/')}]` : '';
+          detail = `${medLabel}${l.medDetail ? '(' + l.medDetail + ')' : ''}${symLabel}(${l.measureSite || '귀'})`;
           val = `${l.temp}°C`;
         } else if (l.category === 'growth') {
           cat = '성장';
           detail = '키/몸무게/머리둘레';
-          val = `${l.weightKg || '-'}kg / ${l.heightCm || '-'}cm / ${l.headCm || '-'}cm`;
+          val = `${l.weightKg != null ? l.weightKg : '-'}kg / ${l.heightCm != null ? l.heightCm : '-'}cm / ${l.headCm != null ? l.headCm : '-'}cm`;
         }
 
         return [dateStr, timeStr, cat, detail, val, l.author || '', (l.memo || '').replace(/,/g, ' ')].join(',');
@@ -1711,15 +1774,41 @@ ${healthText}`;
       state.modalFeed.ml = (lastFeed && lastFeed.ml > 0) ? lastFeed.ml : (state.settings.defaultMl || 120);
       state.modalFeed.offsetMin = 0;
       document.getElementById('feedMlDisplay').textContent = state.modalFeed.ml;
+      document.getElementById('feedDateTimeInput').value = toDateTimeLocalString(new Date());
+      highlightFeedOffsetBtn(0);
       document.getElementById('feedTimePreview').textContent = '방금 (현재 시각)';
       document.getElementById('feedModal').classList.remove('hidden');
+    }
+
+    function highlightFeedOffsetBtn(activeOffset) {
+      const group = document.getElementById('feedOffsetBtnGroup');
+      if (!group) return;
+      Array.from(group.children).forEach(btn => {
+        const isSelected = activeOffset !== null && Number(btn.dataset.offset) === activeOffset;
+        btn.className = isSelected
+          ? 'py-2 rounded-xl bg-sky-500/20 text-sky-400 text-xs font-bold'
+          : 'py-2 rounded-xl bg-slate-100 dark:bg-night-800 text-xs font-medium';
+      });
+    }
+
+    function onFeedDateTimeChange() {
+      const val = document.getElementById('feedDateTimeInput').value;
+      highlightFeedOffsetBtn(null);
+      if (val) {
+        const dt = new Date(val);
+        if (!isNaN(dt.getTime())) {
+          document.getElementById('feedTimePreview').textContent = `${dt.getMonth() + 1}/${dt.getDate()} ${formatTimeHM(dt.getTime())} (직접 지정)`;
+          return;
+        }
+      }
+      document.getElementById('feedTimePreview').textContent = '시각을 선택하세요';
     }
 
     function selectFeedType(type) {
       state.modalFeed.type = type;
       ['formula', 'pumped', 'breast', 'solid'].forEach(t => {
         const btn = document.getElementById(`ftype-${t}`);
-        btn.className = t === type 
+        btn.className = t === type
           ? 'py-3 rounded-2xl font-bold text-xs bg-sky-500 text-white'
           : 'py-3 rounded-2xl font-bold text-xs bg-slate-100 dark:bg-night-800 text-slate-500';
       });
@@ -1752,8 +1841,10 @@ ${healthText}`;
       if (domain === 'feed') {
         state.modalFeed.offsetMin = offsetMin;
         const targetTime = new Date(Date.now() + offsetMin * 60000);
-        document.getElementById('feedTimePreview').textContent = offsetMin === 0 
-          ? '방금 (현재 시각)' 
+        document.getElementById('feedDateTimeInput').value = toDateTimeLocalString(targetTime);
+        highlightFeedOffsetBtn(offsetMin);
+        document.getElementById('feedTimePreview').textContent = offsetMin === 0
+          ? '방금 (현재 시각)'
           : `${Math.abs(offsetMin)}분 전 (${formatTimeHM(targetTime.getTime())})`;
       }
     }
@@ -1778,21 +1869,64 @@ ${healthText}`;
 
     function openHealthModal() {
       state.modalHealth.temp = 36.8;
-      document.getElementById('tempDisplay').textContent = '36.8';
+      state.modalHealth.med = '투약 없음';
+      state.modalHealth.symptoms = [];
+      document.getElementById('tempInput').value = '36.8';
+      document.getElementById('healthMedDetailInput').value = '';
+      const medBtns = Array.from(document.getElementById('healthMedContainer').children);
+      medBtns.forEach((el, idx) => {
+        el.className = idx === 0
+          ? 'px-3 py-2 rounded-xl text-xs font-bold bg-rose-500 text-white'
+          : 'px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400';
+      });
+      Array.from(document.getElementById('healthSymptomContainer').children).forEach(el => {
+        el.className = 'px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400';
+      });
       document.getElementById('healthModal').classList.remove('hidden');
     }
 
     function adjustTemp(delta) {
-      state.modalHealth.temp = Math.max(34.0, Math.min(42.0, +(state.modalHealth.temp + delta).toFixed(1)));
-      document.getElementById('tempDisplay').textContent = state.modalHealth.temp.toFixed(1);
+      const currentVal = parseFloat(document.getElementById('tempInput').value);
+      const base = isNaN(currentVal) ? state.modalHealth.temp : currentVal;
+      state.modalHealth.temp = Math.max(34.0, Math.min(43.0, +(base + delta).toFixed(1)));
+      document.getElementById('tempInput').value = state.modalHealth.temp.toFixed(1);
     }
 
-    function toggleHealthTag(btn, tag) {
-      state.modalHealth.tag = tag;
-      Array.from(document.getElementById('healthTagContainer').children).forEach(el => {
+    function onTempInput(val) {
+      const parsed = parseFloat(val);
+      if (!isNaN(parsed)) {
+        state.modalHealth.temp = Math.max(34.0, Math.min(43.0, parsed));
+      }
+    }
+
+    function normalizeTempInput() {
+      const input = document.getElementById('tempInput');
+      const parsed = parseFloat(input.value);
+      if (isNaN(parsed)) {
+        state.modalHealth.temp = 36.8;
+      } else {
+        state.modalHealth.temp = Math.max(34.0, Math.min(43.0, +parsed.toFixed(1)));
+      }
+      input.value = state.modalHealth.temp.toFixed(1);
+    }
+
+    function selectHealthMed(btn, med) {
+      state.modalHealth.med = med;
+      Array.from(document.getElementById('healthMedContainer').children).forEach(el => {
         el.className = 'px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400';
       });
       btn.className = 'px-3 py-2 rounded-xl text-xs font-bold bg-rose-500 text-white';
+    }
+
+    function toggleSymptomTag(btn, symptom) {
+      const idx = state.modalHealth.symptoms.indexOf(symptom);
+      if (idx >= 0) {
+        state.modalHealth.symptoms.splice(idx, 1);
+        btn.className = 'px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400';
+      } else {
+        state.modalHealth.symptoms.push(symptom);
+        btn.className = 'px-3 py-2 rounded-xl text-xs font-bold bg-amber-500 text-white';
+      }
     }
 
     function selectMeasureSite(btn, site) {
@@ -1823,10 +1957,8 @@ ${healthText}`;
     function applyLocalPrefsUI() {
       document.getElementById('prefLeftHanded').checked = state.prefs.leftHanded;
       document.getElementById('prefShowDiaper').checked = state.prefs.showDiaper;
-      // 왼손잡이 모드: 수유/수면 버튼 좌우 순서 반전
       document.getElementById('actionCardFeed').classList.toggle('order-2', state.prefs.leftHanded);
       document.getElementById('actionCardSleep').classList.toggle('order-1', state.prefs.leftHanded);
-      // 홈 화면 기저귀 버튼 표시/숨김
       document.getElementById('diaperQuickGroup').classList.toggle('hidden', !state.prefs.showDiaper);
     }
 
