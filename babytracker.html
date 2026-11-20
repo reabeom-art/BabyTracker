@@ -62,7 +62,6 @@
     .btn-thumb:active {
       transform: scale(0.96);
     }
-    /* 커스텀 스크롤바 숨김 */
     .no-scrollbar::-webkit-scrollbar {
       display: none;
     }
@@ -106,7 +105,7 @@
     </div>
   </header>
 
-  <!-- 발열 집중 관찰 배너 (최근 24시간 37.5도 이상 기록이 있을 때만 자동 노출) -->
+  <!-- 발열 집중 관찰 배너 (오늘 37.5도 이상 기록이 있을 때만 자동 노출) -->
   <div id="feverAlertBanner" class="hidden bg-rose-600 text-white px-4 py-2.5 text-xs">
     <div class="max-w-lg mx-auto flex items-center justify-between gap-2">
       <div class="flex items-center gap-2">
@@ -119,7 +118,7 @@
     </div>
   </div>
 
-  <!-- iOS 홈 화면 추가 안내 배너 (Safari 일반 탭 접속 시 최초 1회 노출) -->
+  <!-- iOS 홈 화면 추가 안내 배너 -->
   <div id="iosInstallBanner" class="hidden bg-indigo-600 text-white px-4 py-2.5 text-xs">
     <div class="max-w-lg mx-auto flex items-center justify-between gap-2">
       <p>아이폰 Safari 하단 <b>[공유 <i class="fa-solid fa-arrow-up-from-bracket"></i>] → [홈 화면에 추가]</b>를 누르면 앱처럼 전체화면으로 쓸 수 있어요.</p>
@@ -127,13 +126,13 @@
     </div>
   </div>
 
-  <!-- 메인 콘텐츠 컨테이너 (하단 탭바 여백 확보) -->
+  <!-- 메인 콘텐츠 컨테이너 -->
   <main class="flex-1 max-w-lg w-full mx-auto px-4 pt-4 pb-32 space-y-4">
 
     <!-- ==================== TAB 1: 오늘 대시보드 ==================== -->
     <section id="tab-today" class="space-y-4">
       
-      <!-- 1. 아기 현재 상태 요약 카드 (교대 육아 핵심 브리핑) -->
+      <!-- 1. 아기 현재 상태 요약 카드 -->
       <div class="grid grid-cols-2 gap-3">
         <!-- 마지막 수유 경과 카드 -->
         <div class="bg-white dark:bg-night-900 rounded-3xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-sm relative overflow-hidden">
@@ -189,16 +188,15 @@
         </div>
       </div>
 
-      <!-- 3. 한 손 원터치 액션 패널 (엄지가 닿기 쉬운 중앙~하단 배치) -->
+      <!-- 3. 한 손 원터치 액션 패널 -->
       <div class="bg-white dark:bg-night-900 rounded-3xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-3">
         <div class="flex items-center justify-between">
           <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400">빠른 한 손 기록</h2>
           <span class="text-[11px] text-slate-400">터치 즉시 부부 실시간 공유</span>
         </div>
 
-        <!-- 수유 & 수면 메인 대형 버튼 (최소 64px 높이) -->
+        <!-- 수유 & 수면 메인 대형 버튼 -->
         <div id="mainActionGrid" class="grid grid-cols-2 gap-3">
-          <!-- 분유/수유 기록 열기 -->
           <button id="actionCardFeed" onclick="openFeedModal()" class="btn-thumb h-20 rounded-2xl bg-sky-500 hover:bg-sky-600 text-white p-3.5 flex flex-col justify-between items-start shadow-lg shadow-sky-500/20">
             <div class="w-full flex items-center justify-between">
               <i class="fa-solid fa-bottle-droplet text-xl"></i>
@@ -210,7 +208,6 @@
             </div>
           </button>
 
-          <!-- 수면 타이머 토글 / 수동 입력 -->
           <div id="actionCardSleep" class="flex flex-col gap-1.5">
             <button id="mainSleepToggleBtn" onclick="toggleSleepTimer()" class="btn-thumb flex-1 rounded-2xl bg-indigo-500 hover:bg-indigo-600 text-white p-3 flex flex-col justify-between items-start shadow-lg shadow-indigo-500/20">
               <div class="w-full flex items-center justify-between">
@@ -233,7 +230,7 @@
           <span class="text-[10px] bg-sky-500/20 px-2 py-0.5 rounded-full">즉시저장</span>
         </button>
 
-        <!-- 기저귀 1탭 즉시 저장 3종 (설정에서 숨김 가능) -->
+        <!-- 기저귀 1탭 즉시 저장 3종 -->
         <div id="diaperQuickGroup" class="grid grid-cols-3 gap-2 pt-0.5">
           <button onclick="quickLogDiaper('pee')" class="btn-thumb rounded-2xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-600 dark:text-amber-400 flex flex-col items-center justify-center p-2 gap-1">
             <i class="fa-solid fa-droplet text-base"></i>
@@ -262,10 +259,10 @@
         </div>
       </div>
 
-      <!-- 4. 오늘의 최근 기록 피드 -->
+      <!-- 4. 오늘의 최근 기록 피드 (항목 터치 시 수정 가능) -->
       <div class="space-y-2.5">
         <div class="flex items-center justify-between px-1">
-          <h3 class="text-sm font-bold text-slate-700 dark:text-slate-200">오늘의 기록 피드</h3>
+          <h3 class="text-sm font-bold text-slate-700 dark:text-slate-200">오늘의 기록 피드 <span class="text-[11px] font-normal text-slate-400">(터치하여 수정)</span></h3>
           <span id="todayLogCountLabel" class="text-xs text-slate-400">총 0건</span>
         </div>
         <div id="todayLogsContainer" class="space-y-2">
@@ -283,7 +280,7 @@
           <i class="fa-solid fa-chevron-left"></i>
         </button>
         <div class="text-center">
-          <div id="statsDateLabel" class="font-bold text-sm">2026년 11월 20일</div>
+          <div id="statsDateLabel" class="font-bold text-sm">2026-11-20</div>
           <div id="statsDateSub" class="text-[11px] text-slate-400">오늘</div>
         </div>
         <button onclick="changeStatsDate(1)" class="w-11 h-11 rounded-2xl bg-slate-100 dark:bg-night-800 flex items-center justify-center text-slate-600 dark:text-slate-300">
@@ -291,7 +288,7 @@
         </button>
       </div>
 
-      <!-- 24시간 일일 패턴 타임 바 (삐요로그 스타일 시각 블록) -->
+      <!-- 24시간 일일 패턴 타임 바 -->
       <div class="bg-white dark:bg-night-900 rounded-3xl p-4 border border-slate-200/80 dark:border-slate-800 space-y-3">
         <div class="flex items-center justify-between">
           <h3 class="text-sm font-bold">24시간 생활 리듬 타임바</h3>
@@ -302,14 +299,11 @@
           </div>
         </div>
         
-        <!-- 0시 ~ 24시 타임 바 -->
         <div class="relative pt-4 pb-1">
           <div class="flex justify-between text-[10px] text-slate-400 mb-1 px-0.5">
             <span>0시</span><span>6시</span><span>12시</span><span>18시</span><span>24시</span>
           </div>
-          <div id="dailyTimeBar" class="w-full h-10 bg-slate-100 dark:bg-night-800 rounded-xl relative overflow-hidden border border-slate-200/50 dark:border-slate-700/50">
-            <!-- 시간별 블록 렌더링 -->
-          </div>
+          <div id="dailyTimeBar" class="w-full h-10 bg-slate-100 dark:bg-night-800 rounded-xl relative overflow-hidden border border-slate-200/50 dark:border-slate-700/50"></div>
         </div>
         <div id="selectedDaySummaryText" class="text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-night-800/60 p-2.5 rounded-xl">
           선택한 날짜의 수유·수면 요약이 표시됩니다.
@@ -326,26 +320,20 @@
           </div>
         </div>
 
-        <!-- 7일 분유량 차트 -->
         <div>
           <div class="text-xs text-slate-400 mb-2 flex justify-between">
             <span>일별 총 수유량 (ml)</span>
             <span class="text-sky-400 font-medium">하늘색 막대</span>
           </div>
-          <div id="weeklyFeedChart" class="grid grid-cols-7 gap-2 h-28 items-end pt-4 px-1">
-            <!-- JS 막대 생성 -->
-          </div>
+          <div id="weeklyFeedChart" class="grid grid-cols-7 gap-2 h-28 items-end pt-4 px-1"></div>
         </div>
 
-        <!-- 7일 수면 시간 차트 -->
         <div class="pt-2 border-t border-slate-100 dark:border-slate-800">
           <div class="text-xs text-slate-400 mb-2 flex justify-between">
             <span>일별 총 수면 시간 (시간)</span>
             <span class="text-indigo-400 font-medium">보라색 막대</span>
           </div>
-          <div id="weeklySleepChart" class="grid grid-cols-7 gap-2 h-28 items-end pt-4 px-1">
-            <!-- JS 막대 생성 -->
-          </div>
+          <div id="weeklySleepChart" class="grid grid-cols-7 gap-2 h-28 items-end pt-4 px-1"></div>
         </div>
       </div>
 
@@ -376,22 +364,18 @@
             <div id="latestGrowthDate" class="text-[10px] text-slate-400">-</div>
           </div>
         </div>
-        <div id="growthHistoryList" class="space-y-1.5 pt-1">
-          <!-- 최근 성장 기록 리스트 -->
-        </div>
+        <div id="growthHistoryList" class="space-y-1.5 pt-1"></div>
       </div>
 
-      <!-- 최근 삭제함 (실수 삭제 복구) -->
+      <!-- 최근 삭제함 -->
       <div class="bg-white dark:bg-night-900 rounded-3xl p-4 border border-slate-200/80 dark:border-slate-800 space-y-3">
         <div class="flex items-center justify-between">
           <h3 class="text-sm font-bold flex items-center gap-1.5">
-            <i class="fa-solid fa-trash-can-arrow-up text-slate-400"></i> 최근 삭제함
+            <i class="fa-solid fa-trash-can-arrow-up text-slate-400"></i> <span id="trashTitleLabel">최근 삭제함</span>
           </h3>
-          <span class="text-[11px] text-slate-400">실수로 지운 기록 복구</span>
+          <span id="trashSubLabel" class="text-[11px] text-slate-400">선택한 날짜의 삭제 기록</span>
         </div>
-        <div id="trashLogsContainer" class="space-y-2">
-          <!-- 삭제된 항목 렌더링 -->
-        </div>
+        <div id="trashLogsContainer" class="space-y-2"></div>
       </div>
     </section>
 
@@ -454,7 +438,7 @@
           <span class="text-[11px] text-slate-400">진료 전 원클릭 복사</span>
         </div>
         <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-          아기 월령, 최근 24시간 총 수유량, 기저귀(소변/대변) 횟수, 최근 체온 및 투약 내역을 의사 선생님께 바로 보여드리거나 카톡에 붙여넣기 좋은 형태로 정리합니다.
+          아기 월령, 최근 24시간 총 수유량, 기저귀(소변/대변 및 상태) 횟수, 최근 체온 및 해열제/투약 내역을 의사 선생님께 바로 보여드리기 좋은 형태로 정리합니다.
         </p>
         <button onclick="copyPediatricSummary()" class="btn-thumb w-full rounded-2xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-600 dark:text-rose-400 font-bold text-sm flex items-center justify-center gap-2">
           <i class="fa-regular fa-copy"></i> 오늘 상태 요약 텍스트 복사하기
@@ -486,7 +470,7 @@
 
   </main>
 
-  <!-- 하단 고정 3탭 내비게이션 바 (엄지 조작 최적화) -->
+  <!-- 하단 고정 3탭 내비게이션 바 -->
   <nav class="fixed bottom-0 inset-x-0 z-30 bg-white/95 dark:bg-night-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 pb-safe">
     <div class="max-w-lg mx-auto grid grid-cols-3 h-16">
       <button onclick="switchTab('today')" id="nav-today" class="flex flex-col items-center justify-center gap-1 text-indigo-500 dark:text-indigo-400 font-bold">
@@ -504,7 +488,7 @@
     </div>
   </nav>
 
-  <!-- ==================== MODAL 1: 수유 입력 (한 손 엄지 조작 최적화) ==================== -->
+  <!-- ==================== MODAL 1: 수유 입력 (원하는 시각 자유 입력 포함) ==================== -->
   <div id="feedModal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-xs flex items-end sm:items-center justify-center">
     <div class="bg-white dark:bg-night-900 w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl p-5 space-y-4 border-t sm:border border-slate-200 dark:border-slate-800">
       <div class="flex items-center justify-between">
@@ -524,7 +508,7 @@
         <button type="button" onclick="selectFeedType('solid')" id="ftype-solid" class="py-3 rounded-2xl font-bold text-xs bg-slate-100 dark:bg-night-800 text-slate-500">이유식</button>
       </div>
 
-      <!-- 용량 조절 영역 (분유/유축/이유식) -->
+      <!-- 용량 조절 영역 -->
       <div id="feedVolumeSection" class="space-y-3">
         <div class="flex items-center justify-between bg-slate-100 dark:bg-night-800 rounded-2xl p-3">
           <button type="button" onclick="adjustFeedMl(-10)" class="btn-thumb w-14 h-14 rounded-xl bg-white dark:bg-night-900 font-bold text-lg shadow-xs">-10</button>
@@ -534,7 +518,6 @@
           </div>
           <button type="button" onclick="adjustFeedMl(10)" class="btn-thumb w-14 h-14 rounded-xl bg-white dark:bg-night-900 font-bold text-lg shadow-xs">+10</button>
         </div>
-        <!-- 자주 쓰는 프리셋 칩 -->
         <div class="grid grid-cols-5 gap-1.5">
           <button type="button" onclick="setFeedMl(80)" class="py-2.5 rounded-xl bg-slate-100 dark:bg-night-800 text-xs font-bold hover:bg-sky-500/20">80ml</button>
           <button type="button" onclick="setFeedMl(100)" class="py-2.5 rounded-xl bg-slate-100 dark:bg-night-800 text-xs font-bold hover:bg-sky-500/20">100ml</button>
@@ -544,7 +527,7 @@
         </div>
       </div>
 
-      <!-- 직수 시간 영역 (모유 직수 선택 시) -->
+      <!-- 직수 시간 영역 -->
       <div id="feedBreastSection" class="hidden grid grid-cols-2 gap-3">
         <div class="bg-slate-100 dark:bg-night-800 p-3 rounded-2xl text-center space-y-2">
           <div class="text-xs text-slate-400 font-bold">왼쪽 (분)</div>
@@ -564,22 +547,21 @@
         </div>
       </div>
 
-      <!-- 빠른 시간 보정 + 원하는 시각 자유 입력 -->
+      <!-- 수유 시각 빠른 보정 + 원하는 시간 직접 입력 -->
       <div class="space-y-2">
         <div class="flex items-center justify-between text-xs text-slate-400">
-          <span>수유 시각 (빠른 선택 또는 직접 입력)</span>
+          <span>수유 시각 설정 (빠른 선택 또는 직접 지정)</span>
           <span id="feedTimePreview" class="text-sky-400 font-bold">방금 (현재 시각)</span>
         </div>
-        <div class="grid grid-cols-4 gap-1.5" id="feedOffsetBtnGroup">
-          <button type="button" data-offset="0" onclick="setTimeOffset('feed', 0)" class="py-2 rounded-xl bg-sky-500/20 text-sky-400 text-xs font-bold">지금</button>
-          <button type="button" data-offset="-10" onclick="setTimeOffset('feed', -10)" class="py-2 rounded-xl bg-slate-100 dark:bg-night-800 text-xs font-medium">10분 전</button>
-          <button type="button" data-offset="-20" onclick="setTimeOffset('feed', -20)" class="py-2 rounded-xl bg-slate-100 dark:bg-night-800 text-xs font-medium">20분 전</button>
-          <button type="button" data-offset="-30" onclick="setTimeOffset('feed', -30)" class="py-2 rounded-xl bg-slate-100 dark:bg-night-800 text-xs font-medium">30분 전</button>
+        <div class="grid grid-cols-4 gap-1.5">
+          <button type="button" onclick="setTimeOffset('feed', 0)" class="py-2 rounded-xl bg-sky-500/20 text-sky-400 text-xs font-bold">지금</button>
+          <button type="button" onclick="setTimeOffset('feed', -10)" class="py-2 rounded-xl bg-slate-100 dark:bg-night-800 text-xs font-medium">10분 전</button>
+          <button type="button" onclick="setTimeOffset('feed', -20)" class="py-2 rounded-xl bg-slate-100 dark:bg-night-800 text-xs font-medium">20분 전</button>
+          <button type="button" onclick="setTimeOffset('feed', -30)" class="py-2 rounded-xl bg-slate-100 dark:bg-night-800 text-xs font-medium">30분 전</button>
         </div>
-        <input id="feedDateTimeInput" type="datetime-local" onchange="onFeedDateTimeChange()" class="w-full px-3.5 py-3 rounded-2xl bg-slate-100 dark:bg-night-800 text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500">
+        <input id="feedCustomDateTime" type="datetime-local" onchange="onFeedCustomTimeChange(this.value)" class="w-full px-3.5 py-2.5 rounded-2xl bg-slate-100 dark:bg-night-800 text-xs font-bold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500">
       </div>
 
-      <!-- 선택 메모 (역류/트림 등) -->
       <input id="feedMemoInput" type="text" placeholder="메모 (선택: 예 - 트림 완료, 살짝 역류)" class="w-full px-3.5 py-3 rounded-2xl bg-slate-100 dark:bg-night-800 text-sm focus:outline-none">
 
       <button type="button" onclick="submitFeedLog()" class="btn-thumb w-full rounded-2xl bg-sky-500 hover:bg-sky-600 text-white font-bold text-base shadow-lg shadow-sky-500/25">
@@ -588,7 +570,7 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL 2: 지난 수면 수동 입력 (자정 넘김 지원) ==================== -->
+  <!-- ==================== MODAL 2: 지난 수면 수동 입력 ==================== -->
   <div id="sleepManualModal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-xs flex items-end sm:items-center justify-center">
     <div class="bg-white dark:bg-night-900 w-full max-w-lg rounded-t-3xl sm:rounded-3xl p-5 space-y-4 border-t sm:border border-slate-200 dark:border-slate-800">
       <div class="flex items-center justify-between">
@@ -624,28 +606,28 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL 3: 아플 때 기록 (체온 · 투약 · 증상) ==================== -->
+  <!-- ==================== MODAL 3: 아플 때 전용 체온 · 해열제/투약 · 동반 증상 ==================== -->
   <div id="healthModal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-xs flex items-end sm:items-center justify-center">
     <div class="bg-white dark:bg-night-900 w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl p-5 space-y-4 border-t sm:border border-slate-200 dark:border-slate-800">
       <div class="flex items-center justify-between">
         <h3 class="font-bold text-lg flex items-center gap-2">
-          <i class="fa-solid fa-thermometer text-rose-400"></i> 아플 때 기록 (체온 · 투약 · 증상)
+          <i class="fa-solid fa-thermometer text-rose-400"></i> 발열 · 투약 · 증상 기록
         </h3>
         <button onclick="closeModal('healthModal')" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-night-800 flex items-center justify-center text-slate-400">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
 
-      <!-- 체온 조절 스텝퍼 + 숫자 직접 입력 -->
+      <!-- 체온 직접 입력 + 스텝퍼 -->
       <div class="space-y-1.5">
-        <label for="tempInput" class="text-xs text-slate-400 font-medium">체온 측정 (°C) - 숫자를 눌러 직접 입력하거나 ±0.1로 조절하세요</label>
-        <div class="flex items-center justify-between bg-slate-100 dark:bg-night-800 rounded-2xl p-3">
-          <button type="button" onclick="adjustTemp(-0.1)" class="btn-thumb w-14 h-14 rounded-xl bg-white dark:bg-night-900 font-bold text-lg">-0.1</button>
-          <div class="flex items-baseline justify-center gap-1">
-            <input id="tempInput" type="number" step="0.1" min="34.0" max="43.0" inputmode="decimal" value="36.8" oninput="onTempInput(this.value)" onblur="normalizeTempInput()" aria-label="체온 직접 입력" class="w-24 text-center text-3xl font-extrabold text-rose-500 bg-transparent border-b-2 border-rose-500/40 focus:border-rose-500 focus:outline-none">
-            <span class="text-base font-bold text-slate-400">°C</span>
+        <label class="text-xs text-slate-400 font-medium">체온 측정 (°C) - 숫자를 눌러 직접 입력 가능</label>
+        <div class="flex items-center justify-between bg-slate-100 dark:bg-night-800 rounded-2xl p-2.5 gap-2">
+          <button type="button" onclick="adjustTemp(-0.1)" class="btn-thumb w-14 h-14 rounded-xl bg-white dark:bg-night-900 font-bold text-lg shrink-0">-0.1</button>
+          <div class="flex items-center justify-center flex-1">
+            <input id="tempInput" type="number" step="0.1" min="34.0" max="43.0" value="36.8" oninput="onTempDirectInput(this.value)" class="w-28 text-center bg-transparent text-3xl font-extrabold text-rose-500 focus:outline-none border-b-2 border-rose-500/40 focus:border-rose-500">
+            <span class="text-base font-bold text-slate-400 ml-1">°C</span>
           </div>
-          <button type="button" onclick="adjustTemp(0.1)" class="btn-thumb w-14 h-14 rounded-xl bg-white dark:bg-night-900 font-bold text-lg">+0.1</button>
+          <button type="button" onclick="adjustTemp(0.1)" class="btn-thumb w-14 h-14 rounded-xl bg-white dark:bg-night-900 font-bold text-lg shrink-0">+0.1</button>
         </div>
       </div>
 
@@ -659,35 +641,35 @@
         </div>
       </div>
 
-      <!-- 아플 때 복용약 선택 (질병/해열 관련 항목만 구성) -->
+      <!-- 해열제 / 치료약 선택 -->
       <div class="space-y-1.5">
-        <label class="text-xs text-slate-400 font-medium">복용 약 선택 (아플 때 투약)</label>
+        <label class="text-xs text-slate-400 font-medium">해열제 / 약 복용 (해당 시 선택)</label>
         <div class="flex flex-wrap gap-1.5" id="healthMedContainer">
           <button type="button" onclick="selectHealthMed(this, '투약 없음')" class="px-3 py-2 rounded-xl text-xs font-bold bg-rose-500 text-white">투약 없음</button>
-          <button type="button" onclick="selectHealthMed(this, '해열제 (아세트아미노펜)')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400">해열제 (아세트아미노펜)</button>
-          <button type="button" onclick="selectHealthMed(this, '해열제 (이부프로펜)')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400">해열제 (이부프로펜)</button>
-          <button type="button" onclick="selectHealthMed(this, '해열제 (덱시부프로펜)')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400">해열제 (덱시부프로펜)</button>
+          <button type="button" onclick="selectHealthMed(this, '해열제 (아세트아미노펜)')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400">해열제(아세트아미노펜)</button>
+          <button type="button" onclick="selectHealthMed(this, '해열제 (이부프로펜)')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400">해열제(이부프로펜)</button>
+          <button type="button" onclick="selectHealthMed(this, '해열제 (덱시부프로펜)')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400">해열제(덱시부프로펜)</button>
           <button type="button" onclick="selectHealthMed(this, '처방약/감기약')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400">처방약/감기약</button>
           <button type="button" onclick="selectHealthMed(this, '항생제')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400">항생제</button>
           <button type="button" onclick="selectHealthMed(this, '기타 약')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400">기타 약</button>
         </div>
-        <input id="healthMedDetailInput" type="text" placeholder="약 이름 · 용량 직접 입력 (예: 챔프 빨강 3ml)" class="w-full px-3.5 py-2.5 rounded-2xl bg-slate-100 dark:bg-night-800 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500">
+        <input id="healthMedDetailInput" type="text" placeholder="약 이름 · 복용 용량 (예: 챔프 빨강 3ml, 맥시부펜 2.5ml)" class="w-full px-3.5 py-2.5 rounded-2xl bg-slate-100 dark:bg-night-800 text-xs focus:outline-none">
       </div>
 
       <!-- 동반 증상 복수 선택 -->
       <div class="space-y-1.5">
-        <label class="text-xs text-slate-400 font-medium">동반 증상 (복수 선택 가능)</label>
+        <label class="text-xs text-slate-400 font-medium">동반 증상 (중복 선택 가능)</label>
         <div class="flex flex-wrap gap-1.5" id="healthSymptomContainer">
-          <button type="button" onclick="toggleSymptomTag(this, '기침')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400">기침</button>
-          <button type="button" onclick="toggleSymptomTag(this, '콧물')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400">콧물</button>
-          <button type="button" onclick="toggleSymptomTag(this, '구토')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400">구토</button>
-          <button type="button" onclick="toggleSymptomTag(this, '설사')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400">설사</button>
-          <button type="button" onclick="toggleSymptomTag(this, '발진')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400">발진</button>
-          <button type="button" onclick="toggleSymptomTag(this, '처짐')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400">처짐</button>
+          <button type="button" onclick="toggleSymptomChip(this, '기침')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400">기침</button>
+          <button type="button" onclick="toggleSymptomChip(this, '콧물/코막힘')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400">콧물/코막힘</button>
+          <button type="button" onclick="toggleSymptomChip(this, '구토')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400">구토</button>
+          <button type="button" onclick="toggleSymptomChip(this, '설사')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400">설사</button>
+          <button type="button" onclick="toggleSymptomChip(this, '발진')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400">발진</button>
+          <button type="button" onclick="toggleSymptomChip(this, '처짐/보챔')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400">처짐/보챔</button>
         </div>
       </div>
 
-      <input id="healthMemoInput" type="text" placeholder="상세 증상이나 특이사항 메모 (선택)" class="w-full px-3.5 py-3 rounded-2xl bg-slate-100 dark:bg-night-800 text-sm focus:outline-none">
+      <input id="healthMemoInput" type="text" placeholder="소아과 전달용 메모 (예: 새벽부터 열남, 컨디션 양호)" class="w-full px-3.5 py-3 rounded-2xl bg-slate-100 dark:bg-night-800 text-sm focus:outline-none">
 
       <button type="button" onclick="submitHealthLog()" class="btn-thumb w-full rounded-2xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-base">
         건강 기록 저장
@@ -733,7 +715,48 @@
     </div>
   </div>
 
-  <!-- 하단 플로팅 토스트 메시지 (alert 대체 + 실행 취소 버튼 제공) -->
+  <!-- ==================== MODAL 5: 기존 기록 수정 모달 (용량 · 시각 · 상태 · 메모 수정) ==================== -->
+  <div id="editLogModal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-xs flex items-end sm:items-center justify-center">
+    <div class="bg-white dark:bg-night-900 w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl p-5 space-y-4 border-t sm:border border-slate-200 dark:border-slate-800">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 id="editModalTitle" class="font-bold text-lg flex items-center gap-2">
+            <i class="fa-solid fa-pen-to-square text-indigo-400"></i> 기록 수정하기
+          </h3>
+          <p id="editModalAuthorInfo" class="text-[11px] text-slate-400 mt-0.5"></p>
+        </div>
+        <button onclick="closeModal('editLogModal')" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-night-800 flex items-center justify-center text-slate-400">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- 카테고리별 동적 수정 필드 영역 -->
+      <div id="editDynamicFields" class="space-y-3"></div>
+
+      <!-- 공통 시각 수정 (수면 제외) -->
+      <div id="editCommonTimeSection" class="space-y-1.5">
+        <label class="block text-xs text-slate-400 font-medium">기록 시각</label>
+        <input id="editDateTimeInput" type="datetime-local" class="w-full px-3.5 py-3 rounded-2xl bg-slate-100 dark:bg-night-800 text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+      </div>
+
+      <!-- 공통 메모 수정 -->
+      <div class="space-y-1.5">
+        <label class="block text-xs text-slate-400 font-medium">메모</label>
+        <input id="editMemoInput" type="text" placeholder="메모 입력 (선택)" class="w-full px-3.5 py-3 rounded-2xl bg-slate-100 dark:bg-night-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+      </div>
+
+      <div class="grid grid-cols-2 gap-2 pt-1">
+        <button type="button" onclick="closeModal('editLogModal')" class="btn-thumb rounded-2xl bg-slate-100 dark:bg-night-800 text-slate-600 dark:text-slate-300 font-bold text-sm">
+          취소
+        </button>
+        <button type="button" onclick="submitEditLog()" class="btn-thumb rounded-2xl bg-indigo-500 hover:bg-indigo-600 text-white font-bold text-sm shadow-lg shadow-indigo-500/25">
+          수정 완료
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 하단 플로팅 토스트 메시지 (alert 대체 + 실행 취소 및 대변 태그 선택 지원) -->
   <div id="toastContainer" class="fixed bottom-20 inset-x-4 z-50 max-w-lg mx-auto pointer-events-none flex flex-col gap-2"></div>
 
   <script>
@@ -751,41 +774,24 @@
     let activeSleepRef = null;
     let settingsRef = null;
 
-    // 로컬 날짜 문자열 생성 (YYYY-MM-DD)
-    function getLocalDateString(dateObj) {
-      const y = dateObj.getFullYear();
-      const m = String(dateObj.getMonth() + 1).padStart(2, '0');
-      const d = String(dateObj.getDate()).padStart(2, '0');
-      return `${y}-${m}-${d}`;
-    }
-
-    // <input type="datetime-local"> 용 로컬 날짜·시각 문자열 생성 (YYYY-MM-DDTHH:mm)
-    function toDateTimeLocalString(dateObj) {
-      const dStr = getLocalDateString(dateObj);
-      const hh = String(dateObj.getHours()).padStart(2, '0');
-      const mm = String(dateObj.getMinutes()).padStart(2, '0');
-      return `${dStr}T${hh}:${mm}`;
-    }
-
-    // 앱 전역 상태
     const state = {
-      role: localStorage.getItem('baby_parent_role') || '엄마', // '엄마' | '아빠'
-      logs: {},          // { id: { category, timestamp, ... } }
-      activeSleep: null, // { startTime, kind, author } | null
+      role: localStorage.getItem('baby_parent_role') || '엄마',
+      logs: {},
+      activeSleep: null,
       settings: {
         babyName: '우리 아기',
         babyBirth: '',
         feedIntervalHours: 3,
         defaultMl: 120
       },
-      statsDate: getLocalDateString(new Date()), // YYYY-MM-DD
-      // 모달 임시 입력 상태
+      statsDate: getLocalDateString(new Date()),
       modalFeed: {
         type: 'formula',
         ml: 120,
         leftMin: 10,
         rightMin: 10,
-        offsetMin: 0
+        offsetMin: 0,
+        customTs: null
       },
       modalSleep: {
         kind: 'nap'
@@ -799,15 +805,13 @@
       prefs: {
         leftHanded: localStorage.getItem('baby_pref_lefthanded') === 'true',
         showDiaper: localStorage.getItem('baby_pref_showdiaper') !== 'false'
-      }
+      },
+      editingLogId: null
     };
 
-    // Firebase 초기화 실행
     function initFirebase() {
       try {
-        if (!firebase.apps.length) {
-          firebase.initializeApp(FIREBASE_CONFIG);
-        }
+        firebase.initializeApp(FIREBASE_CONFIG);
         db = firebase.database();
 
         const rootPath = 'babyTracker/v1';
@@ -815,13 +819,10 @@
         activeSleepRef = db.ref(`${rootPath}/activeSleep`);
         settingsRef = db.ref(`${rootPath}/settings`);
 
-        // 연결 상태 실시간 감지
         db.ref('.info/connected').on('value', (snap) => {
-          const connected = snap.val() === true;
-          updateSyncUI(connected);
+          updateSyncUI(snap.val() === true);
         });
 
-        // 1) 전체 로그 실시간 구독 (부부 양쪽 폰 즉시 동기화)
         logsRef.on('value', (snapshot) => {
           state.logs = snapshot.val() || {};
           renderAll();
@@ -830,13 +831,11 @@
           updateSyncUI(false, error.message);
         });
 
-        // 2) 진행 중인 수면 타이머 실시간 구독
         activeSleepRef.on('value', (snapshot) => {
           state.activeSleep = snapshot.val() || null;
           renderAll();
         });
 
-        // 3) 아기 기본 설정 실시간 구독
         settingsRef.on('value', (snapshot) => {
           if (snapshot.exists()) {
             state.settings = { ...state.settings, ...snapshot.val() };
@@ -844,6 +843,7 @@
             renderAll();
           }
         });
+
       } catch (err) {
         console.error('Firebase init failed:', err);
         updateSyncUI(false, err.message);
@@ -852,9 +852,25 @@
 
     /**
      * ============================================================================
-     * 2. 유틸리티 함수 (시각 포맷, 경과 시간, 자정 넘김 계산)
+     * 2. 유틸리티 함수 (날짜, 경과 시간, 자정 넘김 계산)
      * ============================================================================
      */
+    function getLocalDateString(dateObj) {
+      const y = dateObj.getFullYear();
+      const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const d = String(dateObj.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function toDateTimeLocalString(dateObj) {
+      const y = dateObj.getFullYear();
+      const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const d = String(dateObj.getDate()).padStart(2, '0');
+      const hh = String(dateObj.getHours()).padStart(2, '0');
+      const mm = String(dateObj.getMinutes()).padStart(2, '0');
+      return `${y}-${m}-${d}T${hh}:${mm}`;
+    }
+
     function formatTimeHM(timestamp) {
       const d = new Date(timestamp);
       return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
@@ -877,7 +893,6 @@
       return `${h}h ${m}m`;
     }
 
-    // 자정을 넘긴 수면의 특정 날짜(targetDateStr)에 해당하는 수면 시간(ms) 계산
     function getSleepOverlapMsForDate(startTime, endTime, targetDateStr) {
       const dayStart = new Date(`${targetDateStr}T00:00:00`).getTime();
       const dayEnd = dayStart + 24 * 60 * 60 * 1000;
@@ -894,11 +909,17 @@
         .sort((a, b) => b.timestamp - a.timestamp);
     }
 
-    // 소프트 삭제된 로그 배열 반환
-    function getDeletedLogs() {
+    // 소프트 삭제된 로그 배열 반환 (특정 날짜 기준 필터링)
+    function getDeletedLogsForDate(targetDateStr) {
       return Object.entries(state.logs)
         .map(([id, item]) => ({ id, ...item }))
-        .filter(item => Boolean(item.deletedAt))
+        .filter(item => {
+          if (!item.deletedAt) return false;
+          // 삭제된 날짜(deletedDate) 또는 원래 기록의 날짜(recordDate / timestamp)가 선택한 날짜와 일치할 때만 노출
+          const delDate = item.deletedDate || getLocalDateString(new Date(item.deletedAt));
+          const recDate = item.recordDate || getLocalDateString(new Date(item.timestamp));
+          return delDate === targetDateStr || recDate === targetDateStr;
+        })
         .sort((a, b) => b.deletedAt - a.deletedAt);
     }
 
@@ -907,25 +928,20 @@
      * 3. 기록 생성 / 수정 / 소프트 삭제 / 복구 액션
      * ============================================================================
      */
-    // 수유 기록 저장 (직접 입력 시각 우선 반영)
     function submitFeedLog() {
-      if (!logsRef) {
-        showToast('서버 연결을 확인 중입니다. 잠시 후 다시 시도해주세요.');
-        return;
-      }
-      const dtVal = document.getElementById('feedDateTimeInput').value;
-      const parsedTime = dtVal ? new Date(dtVal).getTime() : NaN;
-      const targetTimestamp = !isNaN(parsedTime) ? parsedTime : (Date.now() + (state.modalFeed.offsetMin * 60000));
+      if (!logsRef) return;
+      const targetTs = state.modalFeed.customTs !== null
+        ? state.modalFeed.customTs
+        : (Date.now() + (state.modalFeed.offsetMin * 60000));
       const memo = document.getElementById('feedMemoInput').value.trim();
-
       const newLog = {
         category: 'feed',
-        feedType: state.modalFeed.type, // 'formula' | 'pumped' | 'breast' | 'solid'
+        feedType: state.modalFeed.type,
         ml: state.modalFeed.type === 'breast' ? 0 : state.modalFeed.ml,
         leftMin: state.modalFeed.type === 'breast' ? state.modalFeed.leftMin : 0,
         rightMin: state.modalFeed.type === 'breast' ? state.modalFeed.rightMin : 0,
         memo: memo,
-        timestamp: targetTimestamp,
+        timestamp: targetTs,
         author: state.role,
         updatedAt: Date.now()
       };
@@ -935,17 +951,13 @@
         document.getElementById('feedMemoInput').value = '';
         closeModal('feedModal');
         const typeNames = { formula: '분유', pumped: '유축', solid: '이유식' };
-        const desc = newLog.feedType === 'breast'
-          ? `직수(좌${newLog.leftMin}분/우${newLog.rightMin}분)`
+        const desc = newLog.feedType === 'breast' 
+          ? `직수(좌${newLog.leftMin}분/우${newLog.rightMin}분)` 
           : `${typeNames[newLog.feedType] || '분유'} ${newLog.ml}${newLog.feedType === 'solid' ? 'g' : 'ml'}`;
-        showToast(`${desc} (${formatTimeHM(targetTimestamp)}) 기록 완료`, ref.key);
-      }).catch(err => {
-        console.error(err);
-        showToast('저장에 실패했습니다.');
+        showToast(`${desc} 기록 완료`, ref.key);
       });
     }
 
-    // 직전 수유와 동일하게 1탭 즉시 저장
     function instantRepeatLastFeed() {
       if (!logsRef) return;
       const lastFeed = getActiveLogs().find(l => l.category === 'feed');
@@ -972,7 +984,6 @@
       });
     }
 
-    // 수면 타이머 시작/종료 토글
     function toggleSleepTimer() {
       if (!activeSleepRef || !logsRef) return;
       if (!state.activeSleep) {
@@ -1010,7 +1021,6 @@
       }
     }
 
-    // 지난 수면 수동 입력 저장 (자정 넘김 자동 처리)
     function submitManualSleep() {
       if (!logsRef) return;
       const startVal = document.getElementById('manualSleepStart').value;
@@ -1045,7 +1055,7 @@
       });
     }
 
-    // 기저귀 1탭 즉시 저장
+    // 기저귀 1탭 즉시 저장 (대변 포함 시 토스트에서 바로 대변 상태 태그 선택 가능)
     function quickLogDiaper(diaperType) {
       if (!logsRef) return;
       const labelMap = { pee: '소변', poo: '대변', both: '소변+대변' };
@@ -1053,29 +1063,49 @@
       ref.set({
         category: 'diaper',
         diaperType: diaperType,
+        stoolStatus: '',
         timestamp: Date.now(),
         author: state.role,
         updatedAt: Date.now()
       }).then(() => {
-        showToast(`기저귀(${labelMap[diaperType]}) 기록됨`, ref.key);
+        if (diaperType === 'poo' || diaperType === 'both') {
+          showDiaperTagToast(`기저귀(${labelMap[diaperType]}) 기록됨 · 상태 태그 선택:`, ref.key);
+        } else {
+          showToast(`기저귀(${labelMap[diaperType]}) 기록됨`, ref.key);
+        }
+      });
+    }
+
+    // 기저귀 대변 상태 태그 즉시 업데이트
+    function setDiaperStoolStatus(logId, status) {
+      if (!logsRef || !logId) return;
+      logsRef.child(logId).update({
+        stoolStatus: status,
+        updatedAt: Date.now(),
+        updatedBy: state.role
+      }).then(() => {
+        showToast(status ? `대변 상태 [${status}] 저장됨` : '대변 상태 태그가 해제되었습니다.');
       });
     }
 
     // 체온 · 투약 · 증상 저장
     function submitHealthLog() {
       if (!logsRef) return;
-      normalizeTempInput();
+      const rawInput = parseFloat(document.getElementById('tempInput').value);
+      const validTemp = (!isNaN(rawInput) && rawInput >= 34.0 && rawInput <= 43.0)
+        ? Number(rawInput.toFixed(1))
+        : Number(state.modalHealth.temp.toFixed(1));
       const medDetail = document.getElementById('healthMedDetailInput').value.trim();
       const memo = document.getElementById('healthMemoInput').value.trim();
       const ref = logsRef.push();
       ref.set({
         category: 'health',
-        temp: Number(state.modalHealth.temp.toFixed(1)),
+        temp: validTemp,
         measureSite: state.modalHealth.site,
         med: state.modalHealth.med,
         medDetail: medDetail,
-        symptoms: [...state.modalHealth.symptoms],
-        tag: state.modalHealth.med, // 기존 기록 호환용
+        symptoms: state.modalHealth.symptoms,
+        tag: state.modalHealth.med,
         memo: memo,
         timestamp: Date.now(),
         author: state.role,
@@ -1084,12 +1114,11 @@
         document.getElementById('healthMedDetailInput').value = '';
         document.getElementById('healthMemoInput').value = '';
         closeModal('healthModal');
-        const medStr = state.modalHealth.med !== '투약 없음' ? ` · ${state.modalHealth.med}` : '';
-        showToast(`체온 ${state.modalHealth.temp.toFixed(1)}°C (${state.modalHealth.site})${medStr} 저장됨`, ref.key);
+        const medTxt = state.modalHealth.med !== '투약 없음' ? ` · ${state.modalHealth.med}` : '';
+        showToast(`체온 ${validTemp.toFixed(1)}°C (${state.modalHealth.site})${medTxt} 저장됨`, ref.key);
       });
     }
 
-    // 키 · 몸무게 · 머리둘레 성장 기록 저장
     function submitGrowthLog() {
       if (!logsRef) return;
       const weightVal = parseFloat(document.getElementById('growthWeightInput').value);
@@ -1126,22 +1155,31 @@
       });
     }
 
-    // 소프트 삭제 (실수 삭제 복구 지원)
     function softDeleteLog(logId) {
       if (!logsRef) return;
+      const targetLog = state.logs[logId];
+      const now = Date.now();
+      const deletedDateStr = getLocalDateString(new Date(now));
+      const recordDateStr = targetLog && targetLog.timestamp
+        ? getLocalDateString(new Date(targetLog.timestamp))
+        : deletedDateStr;
+
       logsRef.child(logId).update({
-        deletedAt: Date.now(),
+        deletedAt: now,
+        deletedDate: deletedDateStr,
+        recordDate: recordDateStr,
         deletedBy: state.role
       }).then(() => {
         showToast('기록이 삭제되었습니다.', logId, true);
       });
     }
 
-    // 삭제된 기록 복구
     function restoreLog(logId) {
       if (!logsRef) return;
       logsRef.child(logId).update({
         deletedAt: null,
+        deletedDate: null,
+        recordDate: null,
         deletedBy: null,
         updatedAt: Date.now()
       }).then(() => {
@@ -1149,7 +1187,6 @@
       });
     }
 
-    // 아기 기본 설정 저장
     function saveBabySettings() {
       if (!settingsRef) return;
       const babyName = document.getElementById('settingBabyName').value.trim() || '우리 아기';
@@ -1170,7 +1207,7 @@
 
     /**
      * ============================================================================
-     * 4. UI 렌더링 엔진 (대시보드, 타임라인, 7일 차트, 성장, 삭제함)
+     * 4. UI 렌더링 엔진
      * ============================================================================
      */
     function renderAll() {
@@ -1178,13 +1215,11 @@
       const todayStr = getLocalDateString(new Date(now));
       const allLogs = getActiveLogs();
 
-      // 헤더 날짜 & 아기 이름
       document.getElementById('headerBabyName').textContent = state.settings.babyName || '우리 아기';
       const dObj = new Date();
       const days = ['일', '월', '화', '수', '목', '금', '토'];
       document.getElementById('headerDate').textContent = `${dObj.getMonth() + 1}월 ${dObj.getDate()}일 (${days[dObj.getDay()]})`;
 
-      // 직전 수유량 프리셋 업데이트
       const lastFeed = allLogs.find(l => l.category === 'feed');
       const presetMl = (lastFeed && lastFeed.ml > 0) ? lastFeed.ml : (state.settings.defaultMl || 120);
       document.getElementById('quickRepeatFeedBadge').textContent = `${presetMl}ml`;
@@ -1199,14 +1234,13 @@
         repeatLabelEl.textContent = `기본 설정으로 1탭 저장 (분유 ${presetMl}ml)`;
       }
 
-      // 1) 마지막 수유 카드 업데이트
       if (lastFeed) {
         const elapsed = now - lastFeed.timestamp;
         document.getElementById('lastFeedElapsed').textContent = `${formatDuration(elapsed)} 전`;
         document.getElementById('lastFeedAuthor').textContent = lastFeed.author || '-';
         const typeNames = { formula: '분유', pumped: '유축', solid: '이유식' };
-        const typeStr = lastFeed.feedType === 'breast'
-          ? `직수 ${lastFeed.leftMin + lastFeed.rightMin}분`
+        const typeStr = lastFeed.feedType === 'breast' 
+          ? `직수 ${lastFeed.leftMin + lastFeed.rightMin}분` 
           : `${typeNames[lastFeed.feedType] || '분유'} ${lastFeed.ml}${lastFeed.feedType === 'solid' ? 'g' : 'ml'}`;
         document.getElementById('lastFeedDetail').textContent = `${formatTimeHM(lastFeed.timestamp)} · ${typeStr}`;
 
@@ -1226,7 +1260,6 @@
         document.getElementById('nextFeedHint').textContent = '예상 다음 수유: -';
       }
 
-      // 2) 수면 상태 및 타이머 버튼 업데이트
       const mainSleepBtn = document.getElementById('mainSleepToggleBtn');
       const mainSleepBtnText = document.getElementById('mainSleepBtnText');
       const mainSleepSubBadge = document.getElementById('mainSleepSubBadge');
@@ -1266,13 +1299,14 @@
         mainSleepSubBadge.textContent = '타이머';
       }
 
-      // 3) 오늘 누적 집계 계산
       const todayLogs = allLogs.filter(l => getLocalDateString(new Date(l.timestamp)) === todayStr);
       let todayMl = 0;
       let todayFeedCnt = 0;
       let todayPeeCnt = 0;
       let todayPooCnt = 0;
       let lastDiaperLog = null;
+      let feverLogToday = null;
+      let lastAntipyreticToday = null;
 
       todayLogs.forEach(l => {
         if (l.category === 'feed') {
@@ -1282,10 +1316,17 @@
           if (l.diaperType === 'pee' || l.diaperType === 'both') todayPeeCnt++;
           if (l.diaperType === 'poo' || l.diaperType === 'both') todayPooCnt++;
           if (!lastDiaperLog) lastDiaperLog = l;
+        } else if (l.category === 'health') {
+          if (l.temp >= 37.5 && (!feverLogToday || l.temp > feverLogToday.temp)) {
+            feverLogToday = l;
+          }
+          const medStr = l.med || l.tag || '';
+          if (medStr.includes('해열제') && !lastAntipyreticToday) {
+            lastAntipyreticToday = l;
+          }
         }
       });
 
-      // 오늘 총 수면 시간 (자정 넘긴 수면 포함 + 현재 자는 중 시간 포함)
       let todaySleepMs = 0;
       let napCount = 0;
       let nightCount = 0;
@@ -1310,24 +1351,18 @@
       document.getElementById('statPooCount').textContent = `${todayPooCnt}회`;
       document.getElementById('statLastDiaper').textContent = lastDiaperLog ? formatTimeHM(lastDiaperLog.timestamp) : '-';
 
-      // 발열 배너 표시 여부 (최근 24시간 내 37.5°C 이상 기록 기준)
       const feverBanner = document.getElementById('feverAlertBanner');
-      const last24hHealth = allLogs.filter(l => l.category === 'health' && (now - l.timestamp) <= 24 * 3600000);
-      const feverLogs24h = last24hHealth.filter(l => l.temp >= 37.5);
-      if (feverLogs24h.length > 0) {
-        const maxFever = feverLogs24h.reduce((max, cur) => cur.temp > max.temp ? cur : max, feverLogs24h[0]);
-        const lastFeverMed = last24hHealth.find(l => (l.med || l.tag || '').includes('해열제'));
-        const medElapsedText = lastFeverMed ? ` · 마지막 해열제 ${formatDuration(now - lastFeverMed.timestamp)} 전` : '';
+      if (feverLogToday) {
         feverBanner.classList.remove('hidden');
-        document.getElementById('feverAlertText').textContent = `24시간 최고 ${maxFever.temp}°C (${formatTimeHM(maxFever.timestamp)})${medElapsedText}`;
+        const medElapsedTxt = lastAntipyreticToday
+          ? ` · 해열제 ${formatDuration(now - lastAntipyreticToday.timestamp)} 전 복용`
+          : '';
+        document.getElementById('feverAlertText').textContent = `오늘 최고 ${feverLogToday.temp}°C (${formatTimeHM(feverLogToday.timestamp)})${medElapsedTxt}`;
       } else {
         feverBanner.classList.add('hidden');
       }
 
-      // 4) 오늘 기록 피드 리스트 렌더링
       renderTodayFeedList(todayLogs);
-
-      // 5) 통계 탭 & 삭제함 렌더링
       renderStatsTab(allLogs);
       renderTrashList();
     }
@@ -1365,42 +1400,46 @@
         } else if (log.category === 'diaper') {
           const map = { pee: '기저귀 · 소변', poo: '기저귀 · 대변', both: '기저귀 · 소변+대변' };
           iconHtml = `<div class="w-10 h-10 rounded-2xl bg-amber-500/15 text-amber-400 flex items-center justify-center"><i class="fa-solid fa-baby-carriage"></i></div>`;
-          title = map[log.diaperType] || '기저귀 교체';
-          sub = '교체 완료';
+          const statusBadge = log.stoolStatus
+            ? ` <span class="inline-block ml-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold ${log.stoolStatus === '정상' ? 'bg-emerald-500/15 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}">${log.stoolStatus}</span>`
+            : '';
+          title = `${map[log.diaperType] || '기저귀 교체'}${statusBadge}`;
+          sub = log.memo ? log.memo : (log.stoolStatus ? `대변 상태: ${log.stoolStatus}` : '교체 완료');
         } else if (log.category === 'health') {
           const isFever = log.temp >= 37.5;
           iconHtml = `<div class="w-10 h-10 rounded-2xl ${isFever ? 'bg-rose-500 text-white' : 'bg-rose-500/15 text-rose-400'} flex items-center justify-center"><i class="fa-solid fa-thermometer"></i></div>`;
           const medLabel = log.med || log.tag || '투약 없음';
-          const medPart = medLabel !== '투약 없음' ? ` · ${medLabel}` : '';
-          title = `체온 ${log.temp}°C (${log.measureSite || '귀'})${medPart}`;
-          const subParts = [];
-          if (log.medDetail) subParts.push(log.medDetail);
-          if (Array.isArray(log.symptoms) && log.symptoms.length > 0) subParts.push(`증상: ${log.symptoms.join(', ')}`);
-          if (log.memo) subParts.push(log.memo);
-          sub = subParts.length > 0 ? subParts.join(' · ') : (isFever ? '발열 주의 관찰' : '정상 범위');
+          title = `체온 ${log.temp}°C (${log.measureSite || '귀'}) · ${medLabel}`;
+          const symText = (Array.isArray(log.symptoms) && log.symptoms.length > 0) ? `증상: ${log.symptoms.join(', ')}` : '';
+          const detailParts = [log.medDetail, symText, log.memo].filter(Boolean);
+          sub = detailParts.length > 0 ? detailParts.join(' · ') : (isFever ? '발열 주의 관찰' : '정상 범위');
         } else if (log.category === 'growth') {
           iconHtml = `<div class="w-10 h-10 rounded-2xl bg-violet-500/15 text-violet-400 flex items-center justify-center"><i class="fa-solid fa-ruler-vertical"></i></div>`;
           const parts = [];
-          if (log.weightKg != null) parts.push(`${log.weightKg}kg`);
-          if (log.heightCm != null) parts.push(`${log.heightCm}cm`);
-          if (log.headCm != null) parts.push(`머리 ${log.headCm}cm`);
+          if (log.weightKg) parts.push(`${log.weightKg}kg`);
+          if (log.heightCm) parts.push(`${log.heightCm}cm`);
+          if (log.headCm) parts.push(`머리 ${log.headCm}cm`);
           title = `성장 기록 · ${parts.join(' / ')}`;
           sub = log.memo || '키·몸무게 측정';
         }
 
         const authorColor = log.author === '아빠' ? 'text-sky-400 bg-sky-500/10' : 'text-rose-400 bg-rose-500/10';
+        const editedMark = log.updatedBy ? ` · 수정:${log.updatedBy}` : '';
 
         return `
-          <div class="bg-white dark:bg-night-900 rounded-2xl p-3 border border-slate-200/70 dark:border-slate-800 flex items-center justify-between gap-3">
-            <div class="flex items-center gap-3 min-w-0">
+          <div class="bg-white dark:bg-night-900 rounded-2xl p-3 border border-slate-200/70 dark:border-slate-800 flex items-center justify-between gap-2">
+            <div onclick="openEditLogModal('${log.id}')" class="flex items-center gap-3 min-w-0 flex-1 cursor-pointer active:opacity-75">
               ${iconHtml}
-              <div class="min-w-0">
+              <div class="min-w-0 flex-1">
                 <div class="font-bold text-sm truncate">${title}</div>
-                <div class="text-xs text-slate-400 truncate">${formatTimeHM(log.timestamp)} · ${sub}</div>
+                <div class="text-xs text-slate-400 truncate">${formatTimeHM(log.timestamp)} · ${sub}${editedMark}</div>
               </div>
             </div>
-            <div class="flex items-center gap-2 shrink-0">
+            <div class="flex items-center gap-1 shrink-0">
               <span class="text-[11px] font-bold px-2 py-0.5 rounded-lg ${authorColor}">${log.author || '엄마'}</span>
+              <button onclick="openEditLogModal('${log.id}')" aria-label="수정" class="w-9 h-9 rounded-xl text-slate-400 hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-night-800 flex items-center justify-center">
+                <i class="fa-solid fa-pen text-xs"></i>
+              </button>
               <button onclick="softDeleteLog('${log.id}')" aria-label="삭제" class="w-9 h-9 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-slate-100 dark:hover:bg-night-800 flex items-center justify-center">
                 <i class="fa-regular fa-trash-can text-xs"></i>
               </button>
@@ -1416,13 +1455,11 @@
       document.getElementById('statsDateLabel').textContent = targetStr;
       document.getElementById('statsDateSub').textContent = targetStr === todayStr ? '오늘' : '선택한 날짜';
 
-      // 1) 24시간 타임바 렌더링
       const timeBar = document.getElementById('dailyTimeBar');
       const dayStartMs = new Date(`${targetStr}T00:00:00`).getTime();
       const dayTotalMs = 24 * 3600 * 1000;
       let barHtml = '';
 
-      // 수면 블록 (자정 넘김 포함)
       let daySleepTotal = 0;
       allLogs.filter(l => l.category === 'sleep').forEach(s => {
         const overlap = getSleepOverlapMsForDate(s.startTime, s.endTime, targetStr);
@@ -1435,7 +1472,6 @@
         }
       });
 
-      // 수유 및 기저귀 마커
       let dayFeedMl = 0;
       let dayFeedCount = 0;
       allLogs.filter(l => getLocalDateString(new Date(l.timestamp)) === targetStr).forEach(l => {
@@ -1450,10 +1486,9 @@
       });
 
       timeBar.innerHTML = barHtml;
-      document.getElementById('selectedDaySummaryText').innerHTML =
+      document.getElementById('selectedDaySummaryText').innerHTML = 
         `<b>${targetStr}</b> 요약: 총 수유 <b>${dayFeedMl}ml</b> (${dayFeedCount}회) · 총 수면 <b>${formatDuration(daySleepTotal)}</b>`;
 
-      // 2) 최근 7일 주간 차트 렌더링
       const feedChartEl = document.getElementById('weeklyFeedChart');
       const sleepChartEl = document.getElementById('weeklySleepChart');
       const last7Days = [];
@@ -1479,7 +1514,6 @@
       const avgMl = Math.round(last7Days.reduce((a, b) => a + b.ml, 0) / 7);
       document.getElementById('weeklyAvgLabel').textContent = `7일 평균 ${avgMl}ml/일`;
 
-      // 최근 7일 평균 수유 텀 계산
       const weekAgoMs = Date.now() - 7 * 24 * 3600000;
       const weekFeeds = allLogs
         .filter(l => l.category === 'feed' && l.timestamp >= weekAgoMs)
@@ -1521,7 +1555,6 @@
           </div>`;
       }).join('');
 
-      // 3) 성장 기록 카드 렌더링
       renderGrowthSection(allLogs);
     }
 
@@ -1560,7 +1593,7 @@
         if (g.headCm != null) parts.push(`머리둘레 <b>${g.headCm}cm</b>`);
         return `
           <div class="flex items-center justify-between text-xs bg-slate-50 dark:bg-night-800/60 px-3 py-2 rounded-xl">
-            <div class="min-w-0">
+            <div onclick="openEditLogModal('${g.id}')" class="min-w-0 flex-1 cursor-pointer">
               <span class="text-slate-400 mr-1.5">${getLocalDateString(new Date(g.timestamp))}</span>
               <span>${parts.join(' · ')}</span>
             </div>
@@ -1570,10 +1603,22 @@
     }
 
     function renderTrashList() {
-      const deleted = getDeletedLogs().slice(0, 10);
+      const targetStr = state.statsDate;
+      const todayStr = getLocalDateString(new Date());
+      const deleted = getDeletedLogsForDate(targetStr);
       const container = document.getElementById('trashLogsContainer');
+      const titleEl = document.getElementById('trashTitleLabel');
+      const subEl = document.getElementById('trashSubLabel');
+
+      if (titleEl) {
+        titleEl.textContent = targetStr === todayStr ? '최근 삭제함 (오늘)' : `최근 삭제함 (${targetStr})`;
+      }
+      if (subEl) {
+        subEl.textContent = deleted.length > 0 ? `${deleted.length}건 복구 가능` : '해당 날짜 삭제 이력 없음';
+      }
+
       if (deleted.length === 0) {
-        container.innerHTML = `<div class="text-xs text-slate-400 text-center py-3">최근 삭제된 기록이 없습니다.</div>`;
+        container.innerHTML = `<div class="text-xs text-slate-400 text-center py-3">${targetStr === todayStr ? '오늘' : targetStr} 삭제된 기록이 없습니다.</div>`;
         return;
       }
       container.innerHTML = deleted.map(item => {
@@ -1583,9 +1628,10 @@
         if (item.category === 'diaper') label = `기저귀(${item.diaperType})`;
         if (item.category === 'health') label = `체온 ${item.temp}°C`;
         if (item.category === 'growth') label = `성장(${item.weightKg ? item.weightKg + 'kg' : ''} ${item.heightCm ? item.heightCm + 'cm' : ''})`;
+        const delBy = item.deletedBy ? ` · 삭제:${item.deletedBy}` : '';
         return `
           <div class="flex items-center justify-between text-xs bg-slate-50 dark:bg-night-800/60 p-2.5 rounded-xl">
-            <span class="text-slate-400">${formatTimeHM(item.timestamp)} · <b>${label}</b></span>
+            <span class="text-slate-400">${formatTimeHM(item.timestamp)} · <b>${label}</b>${delBy}</span>
             <button onclick="restoreLog('${item.id}')" class="px-2.5 py-1 rounded-lg bg-indigo-500/20 text-indigo-400 font-bold">복구</button>
           </div>`;
       }).join('');
@@ -1603,16 +1649,17 @@
       const totalMl24 = last24hLogs.filter(l => l.category === 'feed').reduce((a, b) => a + (b.ml || 0), 0);
       const feedCnt24 = last24hLogs.filter(l => l.category === 'feed').length;
       const peeCnt24 = last24hLogs.filter(l => l.category === 'diaper' && (l.diaperType === 'pee' || l.diaperType === 'both')).length;
-      const pooCnt24 = last24hLogs.filter(l => l.category === 'diaper' && (l.diaperType === 'poo' || l.diaperType === 'both')).length;
+      const pooLogs24 = last24hLogs.filter(l => l.category === 'diaper' && (l.diaperType === 'poo' || l.diaperType === 'both'));
+      const pooCnt24 = pooLogs24.length;
+      const stoolNotes = pooLogs24.filter(l => l.stoolStatus).map(l => `${formatTimeHM(l.timestamp)} ${l.stoolStatus}`);
+      const stoolDetailText = stoolNotes.length > 0 ? ` (${stoolNotes.join(', ')})` : '';
       const healthLogs = last24hLogs.filter(l => l.category === 'health');
 
-      // 최근 7일 일평균 수유량과 비교
       const weekAgoMs = now - 7 * 24 * 3600000;
       const weekTotalMl = allLogs.filter(l => l.category === 'feed' && l.timestamp >= weekAgoMs).reduce((a, b) => a + (b.ml || 0), 0);
       const avgDailyMl = Math.round(weekTotalMl / 7);
       const compareText = avgDailyMl > 0 ? ` (평소 7일 평균 ${avgDailyMl}ml 대비 ${Math.round((totalMl24 / avgDailyMl) * 100)}%)` : '';
 
-      // 최근 키·몸무게
       const latestW = allLogs.find(l => l.category === 'growth' && l.weightKg != null);
       const latestH = allLogs.find(l => l.category === 'growth' && l.heightCm != null);
       const growthText = (latestW || latestH)
@@ -1632,10 +1679,9 @@
         healthText = `최고 체온: ${maxTempLog.temp}°C (${maxTempLog.measureSite || '귀'}, ${formatTimeHM(maxTempLog.timestamp)})\n` +
           healthLogs.map(h => {
             const medLabel = h.med || h.tag || '투약 없음';
-            const medInfo = medLabel !== '투약 없음' ? `${medLabel}${h.medDetail ? ' - ' + h.medDetail : ''}` : '투약 없음';
-            const symInfo = (Array.isArray(h.symptoms) && h.symptoms.length > 0) ? ` / 증상: ${h.symptoms.join(', ')}` : '';
-            const memoInfo = h.memo ? ` / 메모: ${h.memo}` : '';
-            return `- ${formatTimeHM(h.timestamp)}: ${h.temp}°C [${h.measureSite || '귀'}] (${medInfo}${symInfo}${memoInfo})`;
+            const symTxt = (Array.isArray(h.symptoms) && h.symptoms.length > 0) ? `, 증상: ${h.symptoms.join('/')}` : '';
+            const medDetailTxt = h.medDetail ? ` [${h.medDetail}]` : '';
+            return `- ${formatTimeHM(h.timestamp)}: ${h.temp}°C [${h.measureSite || '귀'}] (${medLabel}${medDetailTxt}${symTxt}${h.memo ? ', ' + h.memo : ''})`;
           }).join('\n');
       }
 
@@ -1643,7 +1689,7 @@
 작성 시각: ${new Date().toLocaleString('ko-KR')}
 최근 체중/신장: ${growthText}
 1. 최근 24시간 수유량: 총 ${totalMl24}ml (${feedCnt24}회)${compareText}
-2. 최근 24시간 배변: 소변 ${peeCnt24}회 / 대변 ${pooCnt24}회
+2. 최근 24시간 배변: 소변 ${peeCnt24}회 / 대변 ${pooCnt24}회${stoolDetailText}
 3. 최근 24시간 체온·투약·증상:
 ${healthText}`;
 
@@ -1687,17 +1733,17 @@ ${healthText}`;
           val = `${Math.round(l.durationMs / 60000)}분`;
         } else if (l.category === 'diaper') {
           cat = '기저귀';
-          detail = l.diaperType;
+          detail = `${l.diaperType}${l.stoolStatus ? '(' + l.stoolStatus + ')' : ''}`;
         } else if (l.category === 'health') {
           cat = '건강';
           const medLabel = l.med || l.tag || '투약 없음';
-          const symLabel = (Array.isArray(l.symptoms) && l.symptoms.length > 0) ? ` [${l.symptoms.join('/')}]` : '';
-          detail = `${medLabel}${l.medDetail ? '(' + l.medDetail + ')' : ''}${symLabel}(${l.measureSite || '귀'})`;
+          const symTxt = (Array.isArray(l.symptoms) && l.symptoms.length > 0) ? ` / ${l.symptoms.join('+')}` : '';
+          detail = `${medLabel}(${l.measureSite || '귀'})${symTxt}`;
           val = `${l.temp}°C`;
         } else if (l.category === 'growth') {
           cat = '성장';
           detail = '키/몸무게/머리둘레';
-          val = `${l.weightKg != null ? l.weightKg : '-'}kg / ${l.heightCm != null ? l.heightCm : '-'}cm / ${l.headCm != null ? l.headCm : '-'}cm`;
+          val = `${l.weightKg || '-'}kg / ${l.heightCm || '-'}cm / ${l.headCm || '-'}cm`;
         }
 
         return [dateStr, timeStr, cat, detail, val, l.author || '', (l.memo || '').replace(/,/g, ' ')].join(',');
@@ -1773,42 +1819,18 @@ ${healthText}`;
       const lastFeed = getActiveLogs().find(l => l.category === 'feed');
       state.modalFeed.ml = (lastFeed && lastFeed.ml > 0) ? lastFeed.ml : (state.settings.defaultMl || 120);
       state.modalFeed.offsetMin = 0;
+      state.modalFeed.customTs = null;
       document.getElementById('feedMlDisplay').textContent = state.modalFeed.ml;
-      document.getElementById('feedDateTimeInput').value = toDateTimeLocalString(new Date());
-      highlightFeedOffsetBtn(0);
       document.getElementById('feedTimePreview').textContent = '방금 (현재 시각)';
+      document.getElementById('feedCustomDateTime').value = toDateTimeLocalString(new Date());
       document.getElementById('feedModal').classList.remove('hidden');
-    }
-
-    function highlightFeedOffsetBtn(activeOffset) {
-      const group = document.getElementById('feedOffsetBtnGroup');
-      if (!group) return;
-      Array.from(group.children).forEach(btn => {
-        const isSelected = activeOffset !== null && Number(btn.dataset.offset) === activeOffset;
-        btn.className = isSelected
-          ? 'py-2 rounded-xl bg-sky-500/20 text-sky-400 text-xs font-bold'
-          : 'py-2 rounded-xl bg-slate-100 dark:bg-night-800 text-xs font-medium';
-      });
-    }
-
-    function onFeedDateTimeChange() {
-      const val = document.getElementById('feedDateTimeInput').value;
-      highlightFeedOffsetBtn(null);
-      if (val) {
-        const dt = new Date(val);
-        if (!isNaN(dt.getTime())) {
-          document.getElementById('feedTimePreview').textContent = `${dt.getMonth() + 1}/${dt.getDate()} ${formatTimeHM(dt.getTime())} (직접 지정)`;
-          return;
-        }
-      }
-      document.getElementById('feedTimePreview').textContent = '시각을 선택하세요';
     }
 
     function selectFeedType(type) {
       state.modalFeed.type = type;
       ['formula', 'pumped', 'breast', 'solid'].forEach(t => {
         const btn = document.getElementById(`ftype-${t}`);
-        btn.className = t === type
+        btn.className = t === type 
           ? 'py-3 rounded-2xl font-bold text-xs bg-sky-500 text-white'
           : 'py-3 rounded-2xl font-bold text-xs bg-slate-100 dark:bg-night-800 text-slate-500';
       });
@@ -1840,12 +1862,25 @@ ${healthText}`;
     function setTimeOffset(domain, offsetMin) {
       if (domain === 'feed') {
         state.modalFeed.offsetMin = offsetMin;
+        state.modalFeed.customTs = null;
         const targetTime = new Date(Date.now() + offsetMin * 60000);
-        document.getElementById('feedDateTimeInput').value = toDateTimeLocalString(targetTime);
-        highlightFeedOffsetBtn(offsetMin);
-        document.getElementById('feedTimePreview').textContent = offsetMin === 0
-          ? '방금 (현재 시각)'
+        document.getElementById('feedCustomDateTime').value = toDateTimeLocalString(targetTime);
+        document.getElementById('feedTimePreview').textContent = offsetMin === 0 
+          ? '방금 (현재 시각)' 
           : `${Math.abs(offsetMin)}분 전 (${formatTimeHM(targetTime.getTime())})`;
+      }
+    }
+
+    function onFeedCustomTimeChange(val) {
+      if (!val) {
+        state.modalFeed.customTs = null;
+        return;
+      }
+      const parsed = new Date(val).getTime();
+      if (!isNaN(parsed)) {
+        state.modalFeed.customTs = parsed;
+        const d = new Date(parsed);
+        document.getElementById('feedTimePreview').textContent = `${d.getMonth() + 1}/${d.getDate()} ${formatTimeHM(parsed)} 지정됨`;
       }
     }
 
@@ -1872,42 +1907,27 @@ ${healthText}`;
       state.modalHealth.med = '투약 없음';
       state.modalHealth.symptoms = [];
       document.getElementById('tempInput').value = '36.8';
-      document.getElementById('healthMedDetailInput').value = '';
-      const medBtns = Array.from(document.getElementById('healthMedContainer').children);
-      medBtns.forEach((el, idx) => {
+      Array.from(document.getElementById('healthMedContainer').children).forEach((el, idx) => {
         el.className = idx === 0
           ? 'px-3 py-2 rounded-xl text-xs font-bold bg-rose-500 text-white'
           : 'px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400';
       });
       Array.from(document.getElementById('healthSymptomContainer').children).forEach(el => {
-        el.className = 'px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400';
+        el.className = 'px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400';
       });
       document.getElementById('healthModal').classList.remove('hidden');
     }
 
     function adjustTemp(delta) {
-      const currentVal = parseFloat(document.getElementById('tempInput').value);
-      const base = isNaN(currentVal) ? state.modalHealth.temp : currentVal;
-      state.modalHealth.temp = Math.max(34.0, Math.min(43.0, +(base + delta).toFixed(1)));
+      state.modalHealth.temp = Math.max(34.0, Math.min(43.0, +(state.modalHealth.temp + delta).toFixed(1)));
       document.getElementById('tempInput').value = state.modalHealth.temp.toFixed(1);
     }
 
-    function onTempInput(val) {
-      const parsed = parseFloat(val);
-      if (!isNaN(parsed)) {
-        state.modalHealth.temp = Math.max(34.0, Math.min(43.0, parsed));
+    function onTempDirectInput(val) {
+      const num = parseFloat(val);
+      if (!isNaN(num) && num >= 34.0 && num <= 43.0) {
+        state.modalHealth.temp = Number(num.toFixed(1));
       }
-    }
-
-    function normalizeTempInput() {
-      const input = document.getElementById('tempInput');
-      const parsed = parseFloat(input.value);
-      if (isNaN(parsed)) {
-        state.modalHealth.temp = 36.8;
-      } else {
-        state.modalHealth.temp = Math.max(34.0, Math.min(43.0, +parsed.toFixed(1)));
-      }
-      input.value = state.modalHealth.temp.toFixed(1);
     }
 
     function selectHealthMed(btn, med) {
@@ -1918,14 +1938,14 @@ ${healthText}`;
       btn.className = 'px-3 py-2 rounded-xl text-xs font-bold bg-rose-500 text-white';
     }
 
-    function toggleSymptomTag(btn, symptom) {
+    function toggleSymptomChip(btn, symptom) {
       const idx = state.modalHealth.symptoms.indexOf(symptom);
       if (idx >= 0) {
         state.modalHealth.symptoms.splice(idx, 1);
-        btn.className = 'px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400';
+        btn.className = 'px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-night-800 text-slate-400';
       } else {
         state.modalHealth.symptoms.push(symptom);
-        btn.className = 'px-3 py-2 rounded-xl text-xs font-bold bg-amber-500 text-white';
+        btn.className = 'px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-500 text-white';
       }
     }
 
@@ -1976,6 +1996,7 @@ ${healthText}`;
       d.setDate(d.getDate() + deltaDays);
       state.statsDate = getLocalDateString(d);
       renderStatsTab(getActiveLogs());
+      renderTrashList();
     }
 
     function syncSettingsInputs() {
@@ -1985,7 +2006,6 @@ ${healthText}`;
       document.getElementById('settingDefaultMl').value = state.settings.defaultMl || 120;
     }
 
-    // 실행 취소(Undo) 지원 토스트 알림
     function showToast(message, logId = null, isRestoreAction = false) {
       const container = document.getElementById('toastContainer');
       const toast = document.createElement('div');
@@ -2004,6 +2024,253 @@ ${healthText}`;
       setTimeout(() => {
         if (toast.parentElement) toast.remove();
       }, 3500);
+    }
+
+    // 대변 기저귀 저장 직후 1탭 대변 상태 태그 선택 토스트
+    function showDiaperTagToast(message, logId) {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = 'pointer-events-auto bg-slate-900 dark:bg-slate-800 text-white p-3.5 rounded-2xl shadow-xl border border-emerald-500/40 space-y-2 text-xs';
+      const tags = ['정상', '묽음', '단단함', '색 이상'];
+      const tagBtns = tags.map(t =>
+        `<button onclick="setDiaperStoolStatus('${logId}', '${t}'); this.closest('.pointer-events-auto').remove();" class="px-2.5 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500 text-emerald-300 hover:text-white font-bold transition-colors">${t}</button>`
+      ).join('');
+      toast.innerHTML = `
+        <div class="flex items-center justify-between">
+          <span class="font-bold text-emerald-400">${message}</span>
+          <button onclick="softDeleteLog('${logId}'); this.closest('.pointer-events-auto').remove();" class="text-rose-400 font-bold underline">실행 취소</button>
+        </div>
+        <div class="flex flex-wrap gap-1.5">${tagBtns}</div>
+      `;
+      container.appendChild(toast);
+      setTimeout(() => {
+        if (toast.parentElement) toast.remove();
+      }, 5500);
+    }
+
+    /**
+     * ============================================================================
+     * 7. 기존 기록 수정 모달 제어 및 저장 로직
+     * ============================================================================
+     */
+    function openEditLogModal(logId) {
+      const log = state.logs[logId];
+      if (!log || log.deletedAt) return;
+      state.editingLogId = logId;
+
+      const catNames = { feed: '수유 기록 수정', sleep: '수면 기록 수정', diaper: '기저귀 기록 수정', health: '체온·투약 기록 수정', growth: '성장 기록 수정' };
+      document.getElementById('editModalTitle').innerHTML = `<i class="fa-solid fa-pen-to-square text-indigo-400"></i> ${catNames[log.category] || '기록 수정'}`;
+      const modInfo = log.updatedBy ? ` · 최근 수정: ${log.updatedBy}` : '';
+      document.getElementById('editModalAuthorInfo').textContent = `최초 작성: ${log.author || '엄마'}${modInfo}`;
+
+      const dynContainer = document.getElementById('editDynamicFields');
+      const commonTimeSec = document.getElementById('editCommonTimeSection');
+      commonTimeSec.classList.remove('hidden');
+      document.getElementById('editDateTimeInput').value = toDateTimeLocalString(new Date(log.timestamp));
+      document.getElementById('editMemoInput').value = log.memo || '';
+
+      if (log.category === 'feed') {
+        const fType = log.feedType || 'formula';
+        dynContainer.innerHTML = `
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">수유 종류</label>
+            <select id="editFeedType" onchange="toggleEditFeedTypeFields(this.value)" class="w-full px-3.5 py-3 rounded-2xl bg-slate-100 dark:bg-night-800 text-sm font-bold">
+              <option value="formula" ${fType === 'formula' ? 'selected' : ''}>분유 (ml)</option>
+              <option value="pumped" ${fType === 'pumped' ? 'selected' : ''}>유축 모유 (ml)</option>
+              <option value="breast" ${fType === 'breast' ? 'selected' : ''}>모유 직수 (분)</option>
+              <option value="solid" ${fType === 'solid' ? 'selected' : ''}>이유식 (g)</option>
+            </select>
+          </div>
+          <div id="editFeedVolWrap" class="${fType === 'breast' ? 'hidden' : ''}">
+            <label class="block text-xs text-slate-400 mb-1">섭취량 (${fType === 'solid' ? 'g' : 'ml'})</label>
+            <input id="editFeedMl" type="number" step="5" min="0" max="1000" value="${log.ml || 0}" class="w-full px-3.5 py-3 rounded-2xl bg-slate-100 dark:bg-night-800 text-base font-bold">
+          </div>
+          <div id="editFeedBreastWrap" class="${fType === 'breast' ? 'grid grid-cols-2 gap-2' : 'hidden'}">
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">왼쪽 (분)</label>
+              <input id="editFeedLeftMin" type="number" min="0" max="60" value="${log.leftMin || 0}" class="w-full px-3.5 py-3 rounded-2xl bg-slate-100 dark:bg-night-800 text-base font-bold">
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">오른쪽 (분)</label>
+              <input id="editFeedRightMin" type="number" min="0" max="60" value="${log.rightMin || 0}" class="w-full px-3.5 py-3 rounded-2xl bg-slate-100 dark:bg-night-800 text-base font-bold">
+            </div>
+          </div>
+        `;
+      } else if (log.category === 'sleep') {
+        commonTimeSec.classList.add('hidden');
+        dynContainer.innerHTML = `
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">수면 구분</label>
+            <select id="editSleepKind" class="w-full px-3.5 py-3 rounded-2xl bg-slate-100 dark:bg-night-800 text-sm font-bold">
+              <option value="nap" ${log.sleepKind !== 'night' ? 'selected' : ''}>낮잠</option>
+              <option value="night" ${log.sleepKind === 'night' ? 'selected' : ''}>밤잠</option>
+            </select>
+          </div>
+          <div class="space-y-2">
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">잠든 시각</label>
+              <input id="editSleepStartDt" type="datetime-local" value="${toDateTimeLocalString(new Date(log.startTime))}" class="w-full px-3.5 py-3 rounded-2xl bg-slate-100 dark:bg-night-800 text-sm font-bold">
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">일어난 시각</label>
+              <input id="editSleepEndDt" type="datetime-local" value="${toDateTimeLocalString(new Date(log.endTime))}" class="w-full px-3.5 py-3 rounded-2xl bg-slate-100 dark:bg-night-800 text-sm font-bold">
+            </div>
+          </div>
+        `;
+      } else if (log.category === 'diaper') {
+        const dType = log.diaperType || 'pee';
+        const sStatus = log.stoolStatus || '';
+        dynContainer.innerHTML = `
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">기저귀 종류</label>
+            <select id="editDiaperType" class="w-full px-3.5 py-3 rounded-2xl bg-slate-100 dark:bg-night-800 text-sm font-bold">
+              <option value="pee" ${dType === 'pee' ? 'selected' : ''}>소변</option>
+              <option value="poo" ${dType === 'poo' ? 'selected' : ''}>대변</option>
+              <option value="both" ${dType === 'both' ? 'selected' : ''}>소변 + 대변</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">대변 상태 태그 (선택)</label>
+            <select id="editStoolStatus" class="w-full px-3.5 py-3 rounded-2xl bg-slate-100 dark:bg-night-800 text-sm font-bold">
+              <option value="" ${sStatus === '' ? 'selected' : ''}>선택 안함</option>
+              <option value="정상" ${sStatus === '정상' ? 'selected' : ''}>정상</option>
+              <option value="묽음" ${sStatus === '묽음' ? 'selected' : ''}>묽음</option>
+              <option value="단단함" ${sStatus === '단단함' ? 'selected' : ''}>단단함</option>
+              <option value="색 이상" ${sStatus === '색 이상' ? 'selected' : ''}>색 이상</option>
+            </select>
+          </div>
+        `;
+      } else if (log.category === 'health') {
+        const curMed = log.med || log.tag || '투약 없음';
+        const curSite = log.measureSite || '귀(고막)';
+        dynContainer.innerHTML = `
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">체온 (°C)</label>
+              <input id="editHealthTemp" type="number" step="0.1" min="34.0" max="43.0" value="${log.temp || 36.8}" class="w-full px-3.5 py-3 rounded-2xl bg-slate-100 dark:bg-night-800 text-base font-bold">
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">측정 부위</label>
+              <select id="editHealthSite" class="w-full px-3.5 py-3 rounded-2xl bg-slate-100 dark:bg-night-800 text-sm font-bold">
+                <option value="귀(고막)" ${curSite === '귀(고막)' ? 'selected' : ''}>귀(고막)</option>
+                <option value="이마" ${curSite === '이마' ? 'selected' : ''}>이마</option>
+                <option value="겨드랑이" ${curSite === '겨드랑이' ? 'selected' : ''}>겨드랑이</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">복용 약</label>
+            <select id="editHealthMed" class="w-full px-3.5 py-3 rounded-2xl bg-slate-100 dark:bg-night-800 text-sm font-bold">
+              <option value="투약 없음" ${curMed === '투약 없음' ? 'selected' : ''}>투약 없음</option>
+              <option value="해열제 (아세트아미노펜)" ${curMed === '해열제 (아세트아미노펜)' ? 'selected' : ''}>해열제 (아세트아미노펜)</option>
+              <option value="해열제 (이부프로펜)" ${curMed === '해열제 (이부프로펜)' ? 'selected' : ''}>해열제 (이부프로펜)</option>
+              <option value="해열제 (덱시부프로펜)" ${curMed === '해열제 (덱시부프로펜)' ? 'selected' : ''}>해열제 (덱시부프로펜)</option>
+              <option value="처방약/감기약" ${curMed === '처방약/감기약' ? 'selected' : ''}>처방약/감기약</option>
+              <option value="항생제" ${curMed === '항생제' ? 'selected' : ''}>항생제</option>
+              <option value="기타 약" ${curMed === '기타 약' ? 'selected' : ''}>기타 약</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">약 이름 · 용량 상세</label>
+            <input id="editHealthMedDetail" type="text" value="${log.medDetail || ''}" placeholder="예: 챔프 빨강 3ml" class="w-full px-3.5 py-2.5 rounded-2xl bg-slate-100 dark:bg-night-800 text-xs">
+          </div>
+        `;
+      } else if (log.category === 'growth') {
+        dynContainer.innerHTML = `
+          <div class="grid grid-cols-3 gap-2">
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">몸무게(kg)</label>
+              <input id="editGrowthWeight" type="number" step="0.01" value="${log.weightKg != null ? log.weightKg : ''}" class="w-full px-3 py-3 rounded-2xl bg-slate-100 dark:bg-night-800 text-sm font-bold">
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">키(cm)</label>
+              <input id="editGrowthHeight" type="number" step="0.1" value="${log.heightCm != null ? log.heightCm : ''}" class="w-full px-3 py-3 rounded-2xl bg-slate-100 dark:bg-night-800 text-sm font-bold">
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">머리(cm)</label>
+              <input id="editGrowthHead" type="number" step="0.1" value="${log.headCm != null ? log.headCm : ''}" class="w-full px-3 py-3 rounded-2xl bg-slate-100 dark:bg-night-800 text-sm font-bold">
+            </div>
+          </div>
+        `;
+      }
+
+      document.getElementById('editLogModal').classList.remove('hidden');
+    }
+
+    function toggleEditFeedTypeFields(val) {
+      document.getElementById('editFeedVolWrap').classList.toggle('hidden', val === 'breast');
+      document.getElementById('editFeedBreastWrap').classList.toggle('hidden', val !== 'breast');
+    }
+
+    function submitEditLog() {
+      const logId = state.editingLogId;
+      const log = state.logs[logId];
+      if (!logsRef || !log) return;
+
+      const memo = document.getElementById('editMemoInput').value.trim();
+      const dtVal = document.getElementById('editDateTimeInput').value;
+      const parsedTs = dtVal ? new Date(dtVal).getTime() : log.timestamp;
+      const updates = {
+        memo: memo,
+        timestamp: !isNaN(parsedTs) ? parsedTs : log.timestamp,
+        updatedAt: Date.now(),
+        updatedBy: state.role
+      };
+
+      if (log.category === 'feed') {
+        const fType = document.getElementById('editFeedType').value;
+        updates.feedType = fType;
+        if (fType === 'breast') {
+          updates.ml = 0;
+          updates.leftMin = Math.max(0, parseInt(document.getElementById('editFeedLeftMin').value, 10) || 0);
+          updates.rightMin = Math.max(0, parseInt(document.getElementById('editFeedRightMin').value, 10) || 0);
+        } else {
+          updates.ml = Math.max(0, parseInt(document.getElementById('editFeedMl').value, 10) || 0);
+          updates.leftMin = 0;
+          updates.rightMin = 0;
+        }
+      } else if (log.category === 'sleep') {
+        const startVal = document.getElementById('editSleepStartDt').value;
+        const endVal = document.getElementById('editSleepEndDt').value;
+        const sMs = new Date(startVal).getTime();
+        const eMs = new Date(endVal).getTime();
+        if (isNaN(sMs) || isNaN(eMs) || eMs <= sMs) {
+          showToast('일어난 시각은 잠든 시각보다 나중이어야 합니다.');
+          return;
+        }
+        updates.sleepKind = document.getElementById('editSleepKind').value;
+        updates.startTime = sMs;
+        updates.endTime = eMs;
+        updates.timestamp = eMs;
+        updates.durationMs = eMs - sMs;
+      } else if (log.category === 'diaper') {
+        updates.diaperType = document.getElementById('editDiaperType').value;
+        updates.stoolStatus = document.getElementById('editStoolStatus').value;
+      } else if (log.category === 'health') {
+        const tVal = parseFloat(document.getElementById('editHealthTemp').value);
+        updates.temp = isNaN(tVal) ? log.temp : Number(Math.max(34.0, Math.min(43.0, tVal)).toFixed(1));
+        updates.measureSite = document.getElementById('editHealthSite').value;
+        const medVal = document.getElementById('editHealthMed').value;
+        updates.med = medVal;
+        updates.tag = medVal;
+        updates.medDetail = document.getElementById('editHealthMedDetail').value.trim();
+      } else if (log.category === 'growth') {
+        const w = parseFloat(document.getElementById('editGrowthWeight').value);
+        const h = parseFloat(document.getElementById('editGrowthHeight').value);
+        const hd = parseFloat(document.getElementById('editGrowthHead').value);
+        updates.weightKg = isNaN(w) ? null : Number(w.toFixed(2));
+        updates.heightCm = isNaN(h) ? null : Number(h.toFixed(1));
+        updates.headCm = isNaN(hd) ? null : Number(hd.toFixed(1));
+      }
+
+      logsRef.child(logId).update(updates).then(() => {
+        closeModal('editLogModal');
+        state.editingLogId = null;
+        showToast('기록이 수정되었습니다.');
+      }).catch(err => {
+        console.error(err);
+        showToast('수정에 실패했습니다.');
+      });
     }
 
     // iOS Safari 홈 화면 추가 안내 체크
